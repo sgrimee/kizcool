@@ -1,0 +1,35 @@
+[
+    {
+        "creationTime": 1569599242000,
+        "lastUpdateTime": 1569599242000,
+        "label": "Incendie",
+        "shortcut": false,
+        "notificationTypeMask": 0,
+        "notificationCondition": "NEVER",
+        "actions": [
+            {
+                "deviceURL": "io://1111-2222-3333/1111111",
+                "commands": [
+                    {
+                        "type": 1,
+                        "name": "open",
+                        "parameters": []
+                    }
+                ]
+            },
+            {
+                "deviceURL": "io://1111-2222-3333/8888888",
+                "commands": [
+                    {
+                        "type": 1,
+                        "name": "setIntensity",
+                        "parameters": [
+                            100
+                        ]
+                    }
+                ]
+            }
+        ],
+        "oid": "21cd8954-95ea-4636-bfac-ec149982906c"
+    }
+]

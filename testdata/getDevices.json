@@ -1,0 +1,866 @@
+[
+    {
+        "creationTime": 1569597358000,
+        "lastUpdateTime": 1569597358000,
+        "label": "Alarm",
+        "deviceURL": "internal://1234-4321-1234/alarm/0",
+        "shortcut": false,
+        "controllableName": "internal:TSKAlarmComponent",
+        "definition": {
+            "commands": [
+                {
+                    "commandName": "alarmOff",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "alarmOn",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "getName",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "off",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "on",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "setName",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "refreshAlarmDelay",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "refreshCurrentAlarmMode",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "refreshIntrusionDetected",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "setAlarmDelay",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "alarmPartial1",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "alarmPartial2",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "setIntrusionDetected",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "setTargetAlarmMode",
+                    "nparams": 1
+                }
+            ],
+            "states": [
+                {
+                    "type": "DataState",
+                    "qualifiedName": "core:NameState"
+                },
+                {
+                    "type": "ContinuousState",
+                    "qualifiedName": "internal:AlarmDelayState"
+                },
+                {
+                    "values": [
+                        "off",
+                        "partial1",
+                        "partial2",
+                        "total"
+                    ],
+                    "type": "DiscreteState",
+                    "qualifiedName": "internal:CurrentAlarmModeState"
+                },
+                {
+                    "values": [
+                        "detected",
+                        "notDetected",
+                        "pending",
+                        "sos"
+                    ],
+                    "type": "DiscreteState",
+                    "qualifiedName": "internal:IntrusionDetectedState"
+                },
+                {
+                    "values": [
+                        "off",
+                        "partial1",
+                        "partial2",
+                        "sos",
+                        "total"
+                    ],
+                    "type": "DiscreteState",
+                    "qualifiedName": "internal:TargetAlarmModeState"
+                }
+            ],
+            "dataProperties": [],
+            "widgetName": "TSKAlarmController",
+            "uiClass": "Alarm",
+            "qualifiedName": "internal:TSKAlarmComponent",
+            "type": "ACTUATOR"
+        },
+        "states": [
+            {
+                "name": "core:NameState",
+                "type": 3,
+                "value": "alarm name"
+            },
+            {
+                "name": "internal:CurrentAlarmModeState",
+                "type": 3,
+                "value": "off"
+            },
+            {
+                "name": "internal:AlarmDelayState",
+                "type": 1,
+                "value": 30
+            },
+            {
+                "name": "internal:TargetAlarmModeState",
+                "type": 3,
+                "value": "off"
+            },
+            {
+                "name": "internal:IntrusionDetectedState",
+                "type": 3,
+                "value": "notDetected"
+            }
+        ],
+        "attributes": [],
+        "available": true,
+        "enabled": true,
+        "placeOID": "aaaaaaaa-0123-4456-89aa-aaaaaaaaaaaa",
+        "widget": "TSKAlarmController",
+        "type": 1,
+        "oid": "12345abc-1234-5678-abcd-ef123456789",
+        "uiClass": "Alarm"
+    },
+    {
+        "creationTime": 1569597295000,
+        "lastUpdateTime": 1569597295000,
+        "label": "Active button",
+        "deviceURL": "internal://1234-4321-1234/pod/0",
+        "shortcut": false,
+        "controllableName": "internal:PodV2Component",
+        "metadata": "{\"tahoma\":{\"touchButtonFlag\":true}}",
+        "definition": {
+            "commands": [
+                {
+                    "commandName": "getName",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "update",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "setCountryCode",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "activateCalendar",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "deactivateCalendar",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "refreshBatteryStatus",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "refreshPodMode",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "refreshUpdateStatus",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "setCalendar",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "setLightingLedPodMode",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "setPodLedOff",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "setPodLedOn",
+                    "nparams": 0
+                }
+            ],
+            "states": [
+                {
+                    "values": [
+                        "offline",
+                        "online"
+                    ],
+                    "type": "DiscreteState",
+                    "qualifiedName": "core:ConnectivityState"
+                },
+                {
+                    "type": "DataState",
+                    "qualifiedName": "core:CountryCodeState"
+                },
+                {
+                    "values": [
+                        "pressed",
+                        "stop"
+                    ],
+                    "type": "DiscreteState",
+                    "qualifiedName": "core:CyclicButtonState"
+                },
+                {
+                    "type": "DataState",
+                    "qualifiedName": "core:NameState"
+                },
+                {
+                    "type": "ContinuousState",
+                    "qualifiedName": "internal:BatteryStatusState"
+                },
+                {
+                    "type": "ContinuousState",
+                    "qualifiedName": "internal:LightingLedPodModeState"
+                }
+            ],
+            "dataProperties": [],
+            "widgetName": "Pod",
+            "uiClass": "Pod",
+            "qualifiedName": "internal:PodV2Component",
+            "type": "ACTUATOR"
+        },
+        "states": [
+            {
+                "name": "core:NameState",
+                "type": 3,
+                "value": "Box"
+            },
+            {
+                "name": "internal:BatteryStatusState",
+                "type": 3,
+                "value": "no"
+            },
+            {
+                "name": "internal:LightingLedPodModeState",
+                "type": 2,
+                "value": 1.0
+            },
+            {
+                "name": "core:CountryCodeState",
+                "type": 3,
+                "value": "BE"
+            }
+        ],
+        "attributes": [],
+        "available": true,
+        "enabled": true,
+        "placeOID": "aaaaaaaa-0123-4456-89aa-aaaaaaaaaaaa",
+        "widget": "Pod",
+        "type": 1,
+        "oid": "48321233-eeee-4444-aaaa-aaaaaaaaaaaa",
+        "uiClass": "Pod"
+    },
+    {
+        "creationTime": 1569598328000,
+        "lastUpdateTime": 1569598328000,
+        "label": "Fenetre1",
+        "deviceURL": "io://1234-4321-1234/11784413",
+        "shortcut": false,
+        "controllableName": "io:WindowOpenerVeluxIOComponent",
+        "definition": {
+            "commands": [
+                {
+                    "commandName": "close",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "delayedStopIdentify",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "getName",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "identify",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "open",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "setClosure",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "setName",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "startIdentify",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "stop",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "stopIdentify",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "wink",
+                    "nparams": 1
+                }
+            ],
+            "states": [
+                {
+                    "type": "ContinuousState",
+                    "qualifiedName": "core:ClosureState"
+                },
+                {
+                    "type": "DataState",
+                    "qualifiedName": "core:NameState"
+                },
+                {
+                    "values": [
+                        "closed",
+                        "open"
+                    ],
+                    "type": "DiscreteState",
+                    "qualifiedName": "core:OpenClosedState"
+                },
+                {
+                    "type": "ContinuousState",
+                    "qualifiedName": "core:PriorityLockTimerState"
+                },
+                {
+                    "type": "ContinuousState",
+                    "qualifiedName": "core:RSSILevelState"
+                },
+                {
+                    "values": [
+                        "available",
+                        "unavailable"
+                    ],
+                    "type": "DiscreteState",
+                    "qualifiedName": "core:StatusState"
+                },
+                {
+                    "values": [
+                        "comfortLevel1",
+                        "comfortLevel2",
+                        "comfortLevel3",
+                        "comfortLevel4",
+                        "environmentProtection",
+                        "humanProtection",
+                        "userLevel1",
+                        "userLevel2"
+                    ],
+                    "type": "DiscreteState",
+                    "qualifiedName": "io:PriorityLockLevelState"
+                },
+                {
+                    "values": [
+                        "LSC",
+                        "SAAC",
+                        "SFC",
+                        "UPS",
+                        "externalGateway",
+                        "localUser",
+                        "myself",
+                        "rain",
+                        "security",
+                        "temperature",
+                        "timer",
+                        "user",
+                        "wind"
+                    ],
+                    "type": "DiscreteState",
+                    "qualifiedName": "io:PriorityLockOriginatorState"
+                }
+            ],
+            "dataProperties": [
+                {
+                    "value": "500",
+                    "qualifiedName": "core:identifyInterval"
+                }
+            ],
+            "widgetName": "PositionableTiltedWindow",
+            "uiClass": "Window",
+            "qualifiedName": "io:WindowOpenerVeluxIOComponent",
+            "type": "ACTUATOR"
+        },
+        "states": [
+            {
+                "name": "core:NameState",
+                "type": 3,
+                "value": "Fenetre sdb enfa"
+            },
+            {
+                "name": "core:StatusState",
+                "type": 3,
+                "value": "available"
+            },
+            {
+                "name": "core:RSSILevelState",
+                "type": 2,
+                "value": 100.0
+            },
+            {
+                "name": "core:ClosureState",
+                "type": 1,
+                "value": 100
+            },
+            {
+                "name": "core:OpenClosedState",
+                "type": 3,
+                "value": "closed"
+            }
+        ],
+        "attributes": [],
+        "available": true,
+        "enabled": true,
+        "placeOID": "eeeeeeee-5555-4444-2222-555555555555",
+        "widget": "PositionableTiltedWindow",
+        "type": 1,
+        "oid": "5ffe24aa-aaaa-bbbb-cccc-066666666666",
+        "uiClass": "Window"
+    },
+    {
+        "creationTime": 1569598328000,
+        "lastUpdateTime": 1569598328000,
+        "label": "Volet1",
+        "deviceURL": "io://1234-4321-1234/12229122",
+        "shortcut": false,
+        "controllableName": "io:RollerShutterVeluxIOComponent",
+        "definition": {
+            "commands": [
+                {
+                    "commandName": "close",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "delayedStopIdentify",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "down",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "getName",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "identify",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "my",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "open",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "refreshMemorized1Position",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "setClosure",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "setDeployment",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "setMemorized1Position",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "setName",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "setPosition",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "setSecuredPosition",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "startIdentify",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "stop",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "stopIdentify",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "up",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "wink",
+                    "nparams": 1
+                }
+            ],
+            "states": [
+                {
+                    "type": "ContinuousState",
+                    "qualifiedName": "core:ClosureState"
+                },
+                {
+                    "type": "ContinuousState",
+                    "qualifiedName": "core:Memorized1PositionState"
+                },
+                {
+                    "type": "DataState",
+                    "qualifiedName": "core:NameState"
+                },
+                {
+                    "values": [
+                        "closed",
+                        "open"
+                    ],
+                    "type": "DiscreteState",
+                    "qualifiedName": "core:OpenClosedState"
+                },
+                {
+                    "type": "ContinuousState",
+                    "qualifiedName": "core:PriorityLockTimerState"
+                },
+                {
+                    "type": "ContinuousState",
+                    "qualifiedName": "core:RSSILevelState"
+                },
+                {
+                    "type": "ContinuousState",
+                    "qualifiedName": "core:SecuredPositionState"
+                },
+                {
+                    "values": [
+                        "available",
+                        "unavailable"
+                    ],
+                    "type": "DiscreteState",
+                    "qualifiedName": "core:StatusState"
+                },
+                {
+                    "values": [
+                        "comfortLevel1",
+                        "comfortLevel2",
+                        "comfortLevel3",
+                        "comfortLevel4",
+                        "environmentProtection",
+                        "humanProtection",
+                        "userLevel1",
+                        "userLevel2"
+                    ],
+                    "type": "DiscreteState",
+                    "qualifiedName": "io:PriorityLockLevelState"
+                },
+                {
+                    "values": [
+                        "LSC",
+                        "SAAC",
+                        "SFC",
+                        "UPS",
+                        "externalGateway",
+                        "localUser",
+                        "myself",
+                        "rain",
+                        "security",
+                        "temperature",
+                        "timer",
+                        "user",
+                        "wind"
+                    ],
+                    "type": "DiscreteState",
+                    "qualifiedName": "io:PriorityLockOriginatorState"
+                }
+            ],
+            "dataProperties": [
+                {
+                    "value": "500",
+                    "qualifiedName": "core:identifyInterval"
+                }
+            ],
+            "widgetName": "PositionableTiltedRollerShutter",
+            "uiClass": "RollerShutter",
+            "qualifiedName": "io:RollerShutterVeluxIOComponent",
+            "type": "ACTUATOR"
+        },
+        "states": [
+            {
+                "name": "core:NameState",
+                "type": 3,
+                "value": "Volet Lior"
+            },
+            {
+                "name": "core:PriorityLockTimerState",
+                "type": 1,
+                "value": 0
+            },
+            {
+                "name": "core:StatusState",
+                "type": 3,
+                "value": "available"
+            },
+            {
+                "name": "core:RSSILevelState",
+                "type": 2,
+                "value": 100.0
+            },
+            {
+                "name": "core:ClosureState",
+                "type": 1,
+                "value": 97
+            },
+            {
+                "name": "core:OpenClosedState",
+                "type": 3,
+                "value": "open"
+            }
+        ],
+        "attributes": [],
+        "available": true,
+        "enabled": true,
+        "placeOID": "22222222-1111-4444-aaaa-aaaaaaaaaaaa",
+        "widget": "PositionableTiltedRollerShutter",
+        "type": 1,
+        "oid": "bbbbbbbb-8888-4444-9999-222222222222",
+        "uiClass": "RollerShutter"
+    },
+    {
+        "creationTime": 1569598328000,
+        "lastUpdateTime": 1569598328000,
+        "label": "Spot1",
+        "deviceURL": "io://1234-4321-1234/13523721",
+        "shortcut": false,
+        "controllableName": "io:DimmableLightIOComponent",
+        "definition": {
+            "commands": [
+                {
+                    "commandName": "delayedStopIdentify",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "getName",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "identify",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "my",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "off",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "on",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "onWithTimer",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "refreshMemorized1Position",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "setIntensity",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "setIntensityWithTimer",
+                    "nparams": 3
+                },
+                {
+                    "commandName": "setMemorized1Position",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "setName",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "setOnOff",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "setPosition",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "setSecuredPosition",
+                    "nparams": 1
+                },
+                {
+                    "commandName": "startIdentify",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "stopIdentify",
+                    "nparams": 0
+                },
+                {
+                    "commandName": "wink",
+                    "nparams": 1
+                }
+            ],
+            "states": [
+                {
+                    "type": "ContinuousState",
+                    "qualifiedName": "core:LightIntensityState"
+                },
+                {
+                    "type": "ContinuousState",
+                    "qualifiedName": "core:Memorized1PositionState"
+                },
+                {
+                    "type": "DataState",
+                    "qualifiedName": "core:NameState"
+                },
+                {
+                    "values": [
+                        "off",
+                        "on"
+                    ],
+                    "type": "DiscreteState",
+                    "qualifiedName": "core:OnOffState"
+                },
+                {
+                    "type": "ContinuousState",
+                    "qualifiedName": "core:PriorityLockTimerState"
+                },
+                {
+                    "type": "ContinuousState",
+                    "qualifiedName": "core:RSSILevelState"
+                },
+                {
+                    "type": "ContinuousState",
+                    "qualifiedName": "core:SecuredPositionState"
+                },
+                {
+                    "values": [
+                        "available",
+                        "unavailable"
+                    ],
+                    "type": "DiscreteState",
+                    "qualifiedName": "core:StatusState"
+                },
+                {
+                    "values": [
+                        "comfortLevel1",
+                        "comfortLevel2",
+                        "comfortLevel3",
+                        "comfortLevel4",
+                        "environmentProtection",
+                        "humanProtection",
+                        "userLevel1",
+                        "userLevel2"
+                    ],
+                    "type": "DiscreteState",
+                    "qualifiedName": "io:PriorityLockLevelState"
+                },
+                {
+                    "values": [
+                        "LSC",
+                        "SAAC",
+                        "SFC",
+                        "UPS",
+                        "externalGateway",
+                        "localUser",
+                        "myself",
+                        "rain",
+                        "security",
+                        "temperature",
+                        "timer",
+                        "user",
+                        "wind"
+                    ],
+                    "type": "DiscreteState",
+                    "qualifiedName": "io:PriorityLockOriginatorState"
+                }
+            ],
+            "dataProperties": [
+                {
+                    "value": "500",
+                    "qualifiedName": "core:identifyInterval"
+                }
+            ],
+            "widgetName": "DimmerLight",
+            "uiClass": "Light",
+            "qualifiedName": "io:DimmableLightIOComponent",
+            "type": "ACTUATOR"
+        },
+        "states": [
+            {
+                "name": "core:NameState",
+                "type": 3,
+                "value": "Spots Nils"
+            },
+            {
+                "name": "core:StatusState",
+                "type": 3,
+                "value": "available"
+            },
+            {
+                "name": "core:RSSILevelState",
+                "type": 2,
+                "value": 98.0
+            },
+            {
+                "name": "core:LightIntensityState",
+                "type": 1,
+                "value": 0
+            },
+            {
+                "name": "core:OnOffState",
+                "type": 3,
+                "value": "off"
+            }
+        ],
+        "attributes": [],
+        "available": true,
+        "enabled": true,
+        "placeOID": "33333333-4444-4444-9999-222222222222",
+        "widget": "DimmerLight",
+        "type": 1,
+        "oid": "33333333-3333-4444-8888-eeeeeeeeeeee",
+        "uiClass": "Light"
+    }
+]
