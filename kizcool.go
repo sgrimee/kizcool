@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"golang.org/x/net/publicsuffix"
@@ -131,22 +132,47 @@ func (k *Kiz) GetDevice(deviceURL DeviceURLT) (Device, error) {
 	return result, nil
 }
 
-// DeviceURLByLabel tries to match the given string to the Labels of the given devices
-// and returns its DeviceURL. An error is return is zero or more than one devices match.
-func DeviceURLByLabel(label string, devices []Device) (DeviceURLT, error) {
+// DeviceFromListByLabel tries to match the given string to the Labels of the given devices
+// and returns the found Device. An error is return is zero or more than one devices match.
+func DeviceFromListByLabel(label string, devices []Device) (Device, error) {
 	var foundDevice Device
 	for _, d := range devices {
 		if strings.Compare(strings.ToLower(d.Label), strings.ToLower(label)) == 0 {
 			if foundDevice.DeviceURL != "" {
-				return "", errors.New("More than one device with that label")
+				return Device{}, errors.New("More than one device with that label")
 			}
 			foundDevice = d
 		}
 	}
 	if foundDevice.DeviceURL == "" {
-		return "", errors.New("No device with that label")
+		return Device{}, errors.New("No device with that label")
 	}
-	return foundDevice.DeviceURL, nil
+	return foundDevice, nil
+}
+
+// GetDeviceByText returns a Device from a text string
+// If first tries to match a DeviceURL. If no match, it tries to match a device Label
+func (k *Kiz) GetDeviceByText(text string) (Device, error) {
+	validURL := regexp.MustCompile(`^[a-z]+://\d{4}-\d{4}-\d{4}/\d+`)
+	if validURL.MatchString(text) {
+		// a DeviceURL was given
+		device, err := k.GetDevice(DeviceURLT(text))
+		if err != nil {
+			return Device{}, err
+		}
+		return device, nil
+	}
+	// try to match a Label from all devices
+	devices, err := k.GetDevices()
+	if err != nil {
+		return Device{}, err
+	}
+	device, err := DeviceFromListByLabel(text, devices)
+	if err != nil {
+		return Device{}, err
+	}
+	return device, nil
+
 }
 
 // GetDeviceState returns the current state with name stateName for the device with URL deviceURL
@@ -204,6 +230,7 @@ func (k *Kiz) Execute(ag ActionGroup) (ExecIDT, error) {
 	if err != nil {
 		return "", err
 	}
+	//fmt.Printf("json: %s", jsonStr)
 	req, err := http.NewRequest("POST", k.config.BaseURL+"/enduserAPI/exec/apply", bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
@@ -223,4 +250,48 @@ func (k *Kiz) Execute(ag ActionGroup) (ExecIDT, error) {
 	var result Result
 	json.NewDecoder(resp.Body).Decode(&result)
 	return result.ExecID, nil
+}
+
+func supportsCommand(device Device, cmdName string) bool {
+	for _, cmd := range device.Definition.Commands {
+		if cmdName == cmd.CommandName {
+			return true
+		}
+	}
+	return false
+}
+
+func actionGroupWithOneCommand(device Device, cmdName string) (ActionGroup, error) {
+	if !supportsCommand(device, "on") {
+		return ActionGroup{}, errors.New("Device does not support this command")
+	}
+	command := Command{
+		Name: cmdName,
+	}
+	action := Action{
+		DeviceURL: device.DeviceURL,
+		Commands:  []Command{command},
+	}
+	actionGroup := ActionGroup{
+		Actions: []Action{action},
+	}
+	return actionGroup, nil
+}
+
+// On turns a device on
+func (k *Kiz) On(device Device) (ExecIDT, error) {
+	ag, err := actionGroupWithOneCommand(device, "on")
+	if err != nil {
+		return "", err
+	}
+	return k.Execute(ag)
+}
+
+// Off turns a device off
+func (k *Kiz) Off(device Device) (ExecIDT, error) {
+	ag, err := actionGroupWithOneCommand(device, "off")
+	if err != nil {
+		return "", err
+	}
+	return k.Execute(ag)
 }

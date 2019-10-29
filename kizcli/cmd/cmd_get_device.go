@@ -2,9 +2,7 @@ package cmd
 
 import (
 	"log"
-	"regexp"
 
-	"github.com/sgrimee/kizcool"
 	"github.com/spf13/cobra"
 )
 
@@ -17,23 +15,7 @@ var deviceCmd = &cobra.Command{
 		if len(args) == 0 {
 			log.Fatal("You must specify a device.")
 		}
-		var deviceURL kizcool.DeviceURLT
-		validURL := regexp.MustCompile(`^[a-z]+://\d{4}-\d{4}-\d{4}/\d+`)
-		if validURL.MatchString(args[0]) {
-			// a DeviceURL was given
-			deviceURL = kizcool.DeviceURLT(args[0])
-		} else {
-			// try to match a Label from all devices
-			devices, err := kiz.GetDevices()
-			if err != nil {
-				log.Fatal(err)
-			}
-			deviceURL, err = kizcool.DeviceURLByLabel(args[0], devices)
-			if err != nil {
-				log.Fatalf("Unable to identify device with url or label: %s", args[0])
-			}
-		}
-		dev, err := kiz.GetDevice(deviceURL)
+		dev, err := kiz.GetDeviceByText(args[0])
 		if err != nil {
 			log.Fatal(err)
 		}

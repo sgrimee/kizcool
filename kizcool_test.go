@@ -86,7 +86,7 @@ func TestGetDevice(t *testing.T) {
 	assert.Equal(t, len(device.States), 5)
 }
 
-func TestDeviceURLByLabel(t *testing.T) {
+func TestDeviceFromListByLabel(t *testing.T) {
 	device1 := Device{
 		Label:     "label1",
 		DeviceURL: "url1",
@@ -98,16 +98,16 @@ func TestDeviceURLByLabel(t *testing.T) {
 	devices := []Device{device1, device2, device2}
 
 	// case found
-	url, err := DeviceURLByLabel("label1", devices)
+	d, err := DeviceFromListByLabel("label1", devices)
 	assert.Nil(t, err)
-	assert.Equal(t, DeviceURLT("url1"), url)
+	assert.Equal(t, DeviceURLT("url1"), d.DeviceURL)
 
 	// case not found
-	url, err = DeviceURLByLabel("bogus", devices)
+	_, err = DeviceFromListByLabel("bogus", devices)
 	assert.NotNil(t, err)
 
 	// case multiple found
-	url, err = DeviceURLByLabel("label2", devices)
+	_, err = DeviceFromListByLabel("label2", devices)
 	assert.NotNil(t, err)
 }
 
@@ -152,7 +152,7 @@ func TestExecute(t *testing.T) {
 		var ag ActionGroup
 		err := json.NewDecoder(req.Body).Decode(&ag)
 		assert.Nil(t, err)
-		assert.Equal(t, "io://1111-0000-4444/12345678", ag.Actions[0].DeviceURL)
+		assert.Equal(t, DeviceURLT("io://1111-0000-4444/12345678"), ag.Actions[0].DeviceURL)
 		assert.Equal(t, "on", ag.Actions[0].Commands[0].Name)
 		rw.Write([]byte(`{"execId": "133a5c55-3655-5455-2355-c33e43535e55"}`))
 	}))

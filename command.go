@@ -2,15 +2,15 @@ package kizcool
 
 // CommandDefinition describes the fields of a Command
 type CommandDefinition struct {
-	CommandName string
-	Nparams     int
+	CommandName string `json:"commandName,omitempty"`
+	Nparams     int    `json:"nparams,omitempty"`
 }
 
 // Command describes a command (duh)
 type Command struct {
-	Type       int
-	Name       string
-	Parameters []interface{}
+	Type       int           `json:"type,omitempty"`
+	Name       string        `json:"name,omitempty"`
+	Parameters []interface{} `json:"parameters,omitempty"`
 }
 
 // CommandNames
