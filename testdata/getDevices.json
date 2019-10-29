@@ -3,7 +3,7 @@
         "creationTime": 1569597358000,
         "lastUpdateTime": 1569597358000,
         "label": "Alarm",
-        "deviceURL": "internal://1234-4321-1234/alarm/0",
+        "deviceURL": "internal://1111-0000-4444/alarm/0",
         "shortcut": false,
         "controllableName": "internal:TSKAlarmComponent",
         "definition": {
@@ -152,7 +152,7 @@
         "creationTime": 1569597295000,
         "lastUpdateTime": 1569597295000,
         "label": "Active button",
-        "deviceURL": "internal://1234-4321-1234/pod/0",
+        "deviceURL": "internal://1111-0000-4444/pod/0",
         "shortcut": false,
         "controllableName": "internal:PodV2Component",
         "metadata": "{\"tahoma\":{\"touchButtonFlag\":true}}",
@@ -282,7 +282,7 @@
         "creationTime": 1569598328000,
         "lastUpdateTime": 1569598328000,
         "label": "Fenetre1",
-        "deviceURL": "io://1234-4321-1234/11784413",
+        "deviceURL": "io://1111-0000-4444/11784413",
         "shortcut": false,
         "controllableName": "io:WindowOpenerVeluxIOComponent",
         "definition": {
@@ -450,7 +450,7 @@
         "creationTime": 1569598328000,
         "lastUpdateTime": 1569598328000,
         "label": "Volet1",
-        "deviceURL": "io://1234-4321-1234/12229122",
+        "deviceURL": "io://1111-0000-4444/22222222",
         "shortcut": false,
         "controllableName": "io:RollerShutterVeluxIOComponent",
         "definition": {
@@ -663,7 +663,7 @@
         "creationTime": 1569598328000,
         "lastUpdateTime": 1569598328000,
         "label": "Spot1",
-        "deviceURL": "io://1234-4321-1234/13523721",
+        "deviceURL": "io://1111-0000-4444/13523721",
         "shortcut": false,
         "controllableName": "io:DimmableLightIOComponent",
         "definition": {

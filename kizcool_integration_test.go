@@ -3,46 +3,38 @@
 package kizcool
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
 var kiz *Kiz
 
-var (
-	validUsername string
-	validPassword string
-)
+var config Config
 
 func TestMain(m *testing.M) {
-	initTestIntegrationConfig()
+	cfg, err := GetConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+	config = cfg
 	os.Exit(m.Run())
 }
 
-// initConfig reads in config file
-func initTestIntegrationConfig() {
-	viper.SetConfigName(".kizcool") // name of config file (without extension)
-	viper.AddConfigPath(".")
-	viper.AddConfigPath("$HOME")
-
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	}
-	validUsername = viper.GetString("username")
-	validPassword = viper.GetString("password")
-}
 func TestIntegrationBadLogin(t *testing.T) {
-	kiz := NewKiz("baduser", "badpass")
+	badConfig := config
+	badConfig.Username = "baduser"
+	badConfig.Password = "badpass"
+	kiz, _ := New(badConfig)
 	err := kiz.Login()
-	assert.EqualError(t, err, "401: Invalid credentials")
+	assert.EqualError(t, err, "401: Authentication error")
 }
 
 func TestIntegrationGoodLogin(t *testing.T) {
-	kiz := NewKiz(validUsername, validPassword)
-	err := kiz.Login()
+	kiz, err := New(config)
+	assert.Nil(t, err)
+	err = kiz.Login()
 	assert.Nil(t, err)
 }

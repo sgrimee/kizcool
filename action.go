@@ -1,5 +1,8 @@
 package kizcool
 
+// ExecIDT is the id of an execution (job)
+type ExecIDT string
+
 // ActionGroup is a list of Actions in sequence, with metadata. Think "scenario".
 type ActionGroup struct {
 	CreationTime          int

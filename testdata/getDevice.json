@@ -1,0 +1,168 @@
+{
+    "creationTime": 1569598328000,
+    "lastUpdateTime": 1569598328000,
+    "label": "Fenetre1",
+    "deviceURL": "io://1111-0000-4444/11784413",
+    "shortcut": false,
+    "controllableName": "io:WindowOpenerVeluxIOComponent",
+    "definition": {
+        "commands": [
+            {
+                "commandName": "close",
+                "nparams": 0
+            },
+            {
+                "commandName": "delayedStopIdentify",
+                "nparams": 1
+            },
+            {
+                "commandName": "getName",
+                "nparams": 0
+            },
+            {
+                "commandName": "identify",
+                "nparams": 0
+            },
+            {
+                "commandName": "open",
+                "nparams": 0
+            },
+            {
+                "commandName": "setClosure",
+                "nparams": 1
+            },
+            {
+                "commandName": "setName",
+                "nparams": 1
+            },
+            {
+                "commandName": "startIdentify",
+                "nparams": 0
+            },
+            {
+                "commandName": "stop",
+                "nparams": 0
+            },
+            {
+                "commandName": "stopIdentify",
+                "nparams": 0
+            },
+            {
+                "commandName": "wink",
+                "nparams": 1
+            }
+        ],
+        "states": [
+            {
+                "type": "ContinuousState",
+                "qualifiedName": "core:ClosureState"
+            },
+            {
+                "type": "DataState",
+                "qualifiedName": "core:NameState"
+            },
+            {
+                "values": [
+                    "closed",
+                    "open"
+                ],
+                "type": "DiscreteState",
+                "qualifiedName": "core:OpenClosedState"
+            },
+            {
+                "type": "ContinuousState",
+                "qualifiedName": "core:PriorityLockTimerState"
+            },
+            {
+                "type": "ContinuousState",
+                "qualifiedName": "core:RSSILevelState"
+            },
+            {
+                "values": [
+                    "available",
+                    "unavailable"
+                ],
+                "type": "DiscreteState",
+                "qualifiedName": "core:StatusState"
+            },
+            {
+                "values": [
+                    "comfortLevel1",
+                    "comfortLevel2",
+                    "comfortLevel3",
+                    "comfortLevel4",
+                    "environmentProtection",
+                    "humanProtection",
+                    "userLevel1",
+                    "userLevel2"
+                ],
+                "type": "DiscreteState",
+                "qualifiedName": "io:PriorityLockLevelState"
+            },
+            {
+                "values": [
+                    "LSC",
+                    "SAAC",
+                    "SFC",
+                    "UPS",
+                    "externalGateway",
+                    "localUser",
+                    "myself",
+                    "rain",
+                    "security",
+                    "temperature",
+                    "timer",
+                    "user",
+                    "wind"
+                ],
+                "type": "DiscreteState",
+                "qualifiedName": "io:PriorityLockOriginatorState"
+            }
+        ],
+        "dataProperties": [
+            {
+                "value": "500",
+                "qualifiedName": "core:identifyInterval"
+            }
+        ],
+        "widgetName": "PositionableTiltedWindow",
+        "uiClass": "Window",
+        "qualifiedName": "io:WindowOpenerVeluxIOComponent",
+        "type": "ACTUATOR"
+    },
+    "states": [
+        {
+            "name": "core:NameState",
+            "type": 3,
+            "value": "Fenetre sdb enfa"
+        },
+        {
+            "name": "core:StatusState",
+            "type": 3,
+            "value": "available"
+        },
+        {
+            "name": "core:RSSILevelState",
+            "type": 2,
+            "value": 100.0
+        },
+        {
+            "name": "core:ClosureState",
+            "type": 1,
+            "value": 100
+        },
+        {
+            "name": "core:OpenClosedState",
+            "type": 3,
+            "value": "closed"
+        }
+    ],
+    "attributes": [],
+    "available": true,
+    "enabled": true,
+    "placeOID": "eeeeeeee-5555-4444-2222-555555555555",
+    "widget": "PositionableTiltedWindow",
+    "type": 1,
+    "oid": "5ffe24aa-aaaa-bbbb-cccc-066666666666",
+    "uiClass": "Window"
+}
