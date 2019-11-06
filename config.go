@@ -33,14 +33,14 @@ func GetConfig() (Config, error) {
 	}, nil
 }
 
-// setConfigValue updates an entry in the config struct, in the
+// setConfigWriteFile updates an entry in the config struct, in the
 // viper singleton and saves it back to the configuration file.
-func setConfigValue(key string, value interface{}) error {
+func setConfigWriteFile(key string, value interface{}) error {
 	viper.Set(key, value)
 	return viper.WriteConfig()
 }
 
 // SaveSessionID stores the session ID in the configuration file
 func SaveSessionID(ID string) error {
-	return setConfigValue("session_id", ID)
+	return setConfigWriteFile("session_id", ID)
 }

@@ -29,7 +29,7 @@ func TestIntegrationBadLogin(t *testing.T) {
 	badConfig.Password = "badpass"
 	kiz, _ := New(badConfig)
 	err := kiz.Login()
-	assert.EqualError(t, err, "401: Authentication error")
+	assert.EqualError(t, err, "401: Bad credentials")
 }
 
 func TestIntegrationGoodLogin(t *testing.T) {
