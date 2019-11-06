@@ -2,6 +2,7 @@ package kizcool
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,7 +13,31 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// var kiz *Kiz
+func TestCheckStatusOk(t *testing.T) {
+	var tests = []struct {
+		name     string
+		code     int
+		bodyText string
+		e        error
+	}{
+		{"200", 200, "", nil},
+		{"401-auth", 401, `{"errorCode":"AUTHENTICATION_ERROR","error":"Bad credentials"}`,
+			NewAuthenticationError("Bad credentials")},
+		{"401-toomany", 401, `{"errorCode":"AUTHENTICATION_ERROR","error":"Too many requests, try again later : login with user@domain.com"}`,
+			NewTooManyRequestsError("Too many requests, try again later : login with user@domain.com")},
+		{"500", 500, `{"errorCode":"WEIRD_ERROR","error":"Unexpected"}`, errors.New("{WEIRD_ERROR Unexpected}")},
+
+		{"bad-json", 999, "Not json", errors.New("json decode: invalid character 'N' looking for beginning of value")},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			w.Write([]byte(tt.bodyText))
+			w.Code = tt.code
+			assert.Equal(t, tt.e, checkStatusOk(w.Result()))
+		})
+	}
+}
 
 func TestBadLogin(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -24,7 +49,7 @@ func TestBadLogin(t *testing.T) {
 	kiz, _ := New(Config{"baduser", "badpass", server.URL, false})
 	kiz.client = server.Client()
 	err := kiz.Login()
-	assert.EqualError(t, err, "401: Authentication error")
+	assert.Equal(t, err, NewAuthenticationError("Bad credentials"))
 }
 
 func TestGoodLogin(t *testing.T) {
@@ -38,6 +63,7 @@ func TestGoodLogin(t *testing.T) {
 		http.SetCookie(rw, &cookie)
 		rw.Write([]byte(`{"success":true,"roles":[{"name":"ENDUSER"}]}`))
 	}))
+	defer server.Close()
 	kiz, _ := New(Config{"gooduser", "goodpass", server.URL, false})
 	kiz.client = server.Client()
 	err := kiz.Login()
@@ -56,6 +82,7 @@ func TestGetSetup(t *testing.T) {
 		assert.Equal(t, "/externalAPI/json/getSetup", req.URL.String())
 		//rw.Write(helperLoadBytes(t, "getSetup.json"))
 	}))
+	defer server.Close()
 	kiz, _ := New(Config{"gooduser", "goodpass", server.URL, false})
 	kiz.client = server.Client()
 	_, err := kiz.getSetup()
@@ -67,6 +94,7 @@ func TestGetDevices(t *testing.T) {
 		assert.Equal(t, "/enduserAPI/setup/devices", req.URL.String())
 		rw.Write(helperLoadBytes(t, "getDevices.json"))
 	}))
+	defer server.Close()
 	kiz, _ := New(Config{"gooduser", "goodpass", server.URL, false})
 	kiz.client = server.Client()
 	devices, err := kiz.GetDevices()
@@ -79,6 +107,7 @@ func TestGetDevice(t *testing.T) {
 		assert.Equal(t, "/enduserAPI/setup/devices/io%3A%2F%2F1111-0000-4444%2F11784413", req.URL.String())
 		rw.Write(helperLoadBytes(t, "getDevice.json"))
 	}))
+	defer server.Close()
 	kiz, _ := New(Config{"gooduser", "goodpass", server.URL, false})
 	kiz.client = server.Client()
 	device, err := kiz.GetDevice("io://1111-0000-4444/11784413")
@@ -116,6 +145,7 @@ func TestGetDeviceState(t *testing.T) {
 		assert.Equal(t, "/enduserAPI/setup/devices/io%3A%2F%2F1111-0000-4444%2F12345678/states/core%3AOnOffState", req.URL.String())
 		rw.Write([]byte(`{"name": "core:OnOffState","type": 3,"value": "off"}`))
 	}))
+	defer server.Close()
 	kiz, _ := New(Config{"gooduser", "goodpass", server.URL, false})
 	kiz.client = server.Client()
 	state, err := kiz.GetDeviceState("io://1111-0000-4444/12345678", "core:OnOffState")
@@ -128,6 +158,7 @@ func TestGetActionGroups(t *testing.T) {
 		assert.Equal(t, "/enduserAPI/actionGroups", req.URL.String())
 		rw.Write(helperLoadBytes(t, "getActionGroups.json"))
 	}))
+	defer server.Close()
 	kiz, _ := New(Config{"gooduser", "goodpass", server.URL, false})
 	kiz.client = server.Client()
 	actionGroups, err := kiz.GetActionGroups()
@@ -140,6 +171,7 @@ func TestRefreshStates(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "/enduserAPI/setup/devices/states/refresh", req.URL.String())
 	}))
+	defer server.Close()
 	kiz, _ := New(Config{"gooduser", "goodpass", server.URL, false})
 	kiz.client = server.Client()
 	err := kiz.RefreshStates()
@@ -156,18 +188,21 @@ func TestExecute(t *testing.T) {
 		assert.Equal(t, "on", ag.Actions[0].Commands[0].Name)
 		rw.Write([]byte(`{"execId": "133a5c55-3655-5455-2355-c33e43535e55"}`))
 	}))
+	defer server.Close()
 	kiz, _ := New(Config{"gooduser", "goodpass", server.URL, false})
 	kiz.client = server.Client()
-	command := Command{
-		Name: CmdOn,
-	}
-	action := Action{
+	device := Device{
 		DeviceURL: "io://1111-0000-4444/12345678",
-		Commands:  []Command{command},
+		Definition: DeviceDefinition{
+			Commands: []CommandDefinition{
+				CommandDefinition{
+					CommandName: CmdOn,
+				},
+			},
+		},
 	}
-	actionGroup := ActionGroup{
-		Actions: []Action{action},
-	}
+	actionGroup, err := ActionGroupWithOneCommand(device, Command{Name: CmdOn})
+	assert.Nil(t, err)
 	id, err := kiz.Execute(actionGroup)
 	assert.Nil(t, err)
 	assert.Equal(t, 36, len(string(id)))

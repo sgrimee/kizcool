@@ -8,9 +8,9 @@ type CommandDefinition struct {
 
 // Command describes a command (duh)
 type Command struct {
-	Type       int           `json:"type,omitempty"`
-	Name       string        `json:"name,omitempty"`
-	Parameters []interface{} `json:"parameters,omitempty"`
+	Type       int         `json:"type,omitempty"`
+	Name       string      `json:"name,omitempty"`
+	Parameters interface{} `json:"parameters,omitempty"`
 }
 
 // CommandNames
@@ -22,7 +22,7 @@ const (
 	CmdOn            = "on"
 	CmdOpen          = "open"
 	CmdSetIntensity  = "setIntensity"
-	CmdSetPosition   = "setPosition"
+	CmdSetClosure    = "setClosure"
 	CmdStartIdentify = "startIdentify"
 	CmdStop          = "stop"
 	CmdStopIdentify  = "stopIdentify"
@@ -47,12 +47,12 @@ const (
 // "refreshUpdateStatus"
 // "setAlarmDelay"
 // "setCalendar"
-// "setClosure"
 // "setCountryCode"
 // "setDeployment"
 // "setIntensityWithTimer"
 // "setIntrusionDetected"
 // "setLightingLedPodMode"
+// "SetPosition"
 // "setMemorized1Position"
 // "setName"
 // "setOnOff"

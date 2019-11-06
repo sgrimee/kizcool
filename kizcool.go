@@ -46,23 +46,28 @@ func New(config Config) (*Kiz, error) {
 }
 
 // checkStatusOk performs simple tests to ensure the request was successful
-// if an error occured, try to qualify it then return it. If not return nil.
+// if an error occured, try to qualify it then return it. In this case the Body of the
+// response will not be usable later on.
 func checkStatusOk(resp *http.Response) error {
+	if resp.StatusCode == 200 {
+		return nil
+	}
+	// Decode the body to try to get a meaningful error message
+	type errResult struct {
+		ErrorCode string `json:"errorCode"`
+		ErrorMsg  string `json:"error"`
+	}
+	var result errResult
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return fmt.Errorf("json decode: %v", err)
+	}
 	if resp.StatusCode == 401 {
-		err := &AuthenticationError{401, "Authentication error"}
-		return err
-	}
-	if resp.StatusCode != 200 {
-		// Decode the body to try to get a meaningful error message
-		var result map[string]interface{}
-		json.NewDecoder(resp.Body).Decode(&result)
-		msg := result["error"]
-		if msg == nil {
-			msg = result
+		if strings.Contains(result.ErrorMsg, "Too many requests") {
+			return NewTooManyRequestsError(result.ErrorMsg)
 		}
-		return fmt.Errorf("%v", msg)
+		return NewAuthenticationError(result.ErrorMsg)
 	}
-	return nil
+	return fmt.Errorf("%v", result)
 }
 
 // Login and get a session cookie
@@ -252,21 +257,19 @@ func (k *Kiz) Execute(ag ActionGroup) (ExecIDT, error) {
 	return result.ExecID, nil
 }
 
-func supportsCommand(device Device, cmdName string) bool {
-	for _, cmd := range device.Definition.Commands {
-		if cmdName == cmd.CommandName {
+func supportsCommand(device Device, command Command) bool {
+	for _, supportedCommand := range device.Definition.Commands {
+		if command.Name == supportedCommand.CommandName {
 			return true
 		}
 	}
 	return false
 }
 
-func actionGroupWithOneCommand(device Device, cmdName string) (ActionGroup, error) {
-	if !supportsCommand(device, "on") {
+// ActionGroupWithOneCommand returns an action group with a single command for the device
+func ActionGroupWithOneCommand(device Device, command Command) (ActionGroup, error) {
+	if !supportsCommand(device, command) {
 		return ActionGroup{}, errors.New("Device does not support this command")
-	}
-	command := Command{
-		Name: cmdName,
 	}
 	action := Action{
 		DeviceURL: device.DeviceURL,
@@ -280,7 +283,7 @@ func actionGroupWithOneCommand(device Device, cmdName string) (ActionGroup, erro
 
 // On turns a device on
 func (k *Kiz) On(device Device) (ExecIDT, error) {
-	ag, err := actionGroupWithOneCommand(device, "on")
+	ag, err := ActionGroupWithOneCommand(device, Command{Name: CmdOn})
 	if err != nil {
 		return "", err
 	}
@@ -289,7 +292,58 @@ func (k *Kiz) On(device Device) (ExecIDT, error) {
 
 // Off turns a device off
 func (k *Kiz) Off(device Device) (ExecIDT, error) {
-	ag, err := actionGroupWithOneCommand(device, "off")
+	ag, err := ActionGroupWithOneCommand(device, Command{Name: CmdOff})
+	if err != nil {
+		return "", err
+	}
+	return k.Execute(ag)
+}
+
+// Open opens a device
+func (k *Kiz) Open(device Device) (ExecIDT, error) {
+	ag, err := ActionGroupWithOneCommand(device, Command{Name: CmdOpen})
+	if err != nil {
+		return "", err
+	}
+	return k.Execute(ag)
+}
+
+// Close closes a device
+func (k *Kiz) Close(device Device) (ExecIDT, error) {
+	ag, err := ActionGroupWithOneCommand(device, Command{Name: CmdClose})
+	if err != nil {
+		return "", err
+	}
+	return k.Execute(ag)
+}
+
+// Stop interrupts the current activity
+func (k *Kiz) Stop(device Device) (ExecIDT, error) {
+	ag, err := ActionGroupWithOneCommand(device, Command{Name: CmdStop})
+	if err != nil {
+		return "", err
+	}
+	return k.Execute(ag)
+}
+
+// SetIntensity sets the light intensity to given value
+func (k *Kiz) SetIntensity(device Device, intensity int) (ExecIDT, error) {
+	ag, err := ActionGroupWithOneCommand(device, Command{
+		Name:       CmdSetIntensity,
+		Parameters: []int{intensity},
+	})
+	if err != nil {
+		return "", err
+	}
+	return k.Execute(ag)
+}
+
+// SetClosure sets the device closure/position to given value
+func (k *Kiz) SetClosure(device Device, position int) (ExecIDT, error) {
+	ag, err := ActionGroupWithOneCommand(device, Command{
+		Name:       CmdSetClosure,
+		Parameters: []int{position},
+	})
 	if err != nil {
 		return "", err
 	}
