@@ -17,9 +17,5 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = k.Login()
-	if err != nil {
-		log.Fatal(err)
-	}
 	kiz = k
 }

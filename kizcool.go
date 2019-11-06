@@ -32,15 +32,22 @@ func New(config Config) (*Kiz, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	client := &http.Client{
-		Jar: jar,
+	if config.SessionID != "" {
+		c := http.Cookie{
+			Name:  "JSESSIONID",
+			Value: config.SessionID,
+		}
+		url, err := url.Parse(config.BaseURL)
+		if err != nil {
+			return nil, err
+		}
+		jar.SetCookies(url, []*http.Cookie{&c})
 	}
-
 	k := Kiz{
 		config: config,
-		Debug:  config.Debug,
-		client: client,
+		client: &http.Client{
+			Jar: jar,
+		},
 	}
 	return &k, nil
 }
@@ -70,7 +77,8 @@ func checkStatusOk(resp *http.Response) error {
 	return fmt.Errorf("%v", result)
 }
 
-// Login and get a session cookie
+// Login and get a session ID
+// The new sessionID is stored/updated in the configfile
 func (k *Kiz) Login() error {
 	formData := url.Values{"userId": {k.config.Username}, "userPassword": {k.config.Password}}
 	resp, err := k.client.PostForm(k.config.BaseURL+"/enduserAPI/login", formData)
@@ -83,6 +91,7 @@ func (k *Kiz) Login() error {
 	}
 	for _, c := range resp.Cookies() {
 		if (c.Name == "JSESSIONID") && (c.Value != "") {
+			SaveSessionID(c.Value)
 			return nil
 		}
 	}
@@ -235,7 +244,6 @@ func (k *Kiz) Execute(ag ActionGroup) (ExecIDT, error) {
 	if err != nil {
 		return "", err
 	}
-	//fmt.Printf("json: %s", jsonStr)
 	req, err := http.NewRequest("POST", k.config.BaseURL+"/enduserAPI/exec/apply", bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
