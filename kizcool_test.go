@@ -195,7 +195,7 @@ func TestExecute(t *testing.T) {
 		DeviceURL: "io://1111-0000-4444/12345678",
 		Definition: DeviceDefinition{
 			Commands: []CommandDefinition{
-				CommandDefinition{
+				{
 					CommandName: CmdOn,
 				},
 			},

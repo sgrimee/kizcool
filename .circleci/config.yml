@@ -1,9 +1,50 @@
- version: 2
- jobs:
-   build:
-     docker:
-       - image: circleci/golang:1.13
-     steps:
-       - checkout
-       - deps: go get -t
-       - test: go test -v
+version: 2
+
+references:
+  workspace: &workspace
+    /go/src/github.com/sgrimee/kizcool
+
+  run_tests: &run_tests
+    run:
+      name: "All Commands"
+      command: |
+        mkdir -p bin
+        go get -t -v ./...
+        PATH=$PATH:$PWD/bin go test -v ./...
+        go build
+        if [ -z $NOVET ]; then
+          diff -u <(echo -n) <(go vet . 2>&1');
+        fi
+jobs:
+  go-current:
+    docker:
+      - image: circleci/golang:1.13
+    working_directory: *workspace
+    steps:
+      - checkout
+      - *run_tests
+      - run:
+          name: "Check formatting"
+          command: diff -u <(echo -n) <(gofmt -d -s .)
+  go-previous:
+    docker:
+      - image: circleci/golang:1.12
+    working_directory: *workspace
+    steps:
+      - checkout
+      - *run_tests
+  go-latest:
+    docker:
+      - image: circleci/golang:latest
+    working_directory: *workspace
+    steps:
+      - checkout
+      - *run_tests
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - go-current
+      - go-previous
+      - go-latest
