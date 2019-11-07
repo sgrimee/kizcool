@@ -13,7 +13,7 @@ references:
         PATH=$PATH:$PWD/bin go test -v ./...
         go build
         if [ -z $NOVET ]; then
-          diff -u <(echo -n) <(go vet . 2>&1');
+          diff -u <(echo -n) <(go vet . 2>&1);
         fi
 jobs:
   go-current:
