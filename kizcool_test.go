@@ -2,7 +2,6 @@ package kizcool
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -10,33 +9,23 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sgrimee/kizcool/client"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCheckStatusOk(t *testing.T) {
-	var tests = []struct {
-		name     string
-		code     int
-		bodyText string
-		e        error
-	}{
-		{"200", 200, "", nil},
-		{"401-auth", 401, `{"errorCode":"AUTHENTICATION_ERROR","error":"Bad credentials"}`,
-			NewAuthenticationError("Bad credentials")},
-		{"401-toomany", 401, `{"errorCode":"AUTHENTICATION_ERROR","error":"Too many requests, try again later : login with user@domain.com"}`,
-			NewTooManyRequestsError("Too many requests, try again later : login with user@domain.com")},
-		{"500", 500, `{"errorCode":"WEIRD_ERROR","error":"Unexpected"}`, errors.New("{WEIRD_ERROR Unexpected}")},
+type SpyClient struct {
+	client.Client
+}
 
-		{"bad-json", 999, "Not json", errors.New("json decode: invalid character 'N' looking for beginning of value")},
+func newSpyClient(username, password, baseURL, sessionID string, hc *http.Client) (SpyClient, error) {
+	realClient, err := client.NewWithHC(username, password, baseURL, sessionID, hc)
+	if err != nil {
+		return SpyClient{}, nil
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			w.Write([]byte(tt.bodyText))
-			w.Code = tt.code
-			assert.Equal(t, tt.e, checkStatusOk(w.Result()))
-		})
+	sc := SpyClient{
+		Client: realClient,
 	}
+	return sc, nil
 }
 
 func TestBadLogin(t *testing.T) {
@@ -46,10 +35,11 @@ func TestBadLogin(t *testing.T) {
 		rw.Write([]byte(`{"errorCode": "AUTHENTICATION_ERROR","error": "Bad credentials"}`))
 	}))
 	defer server.Close()
-	kiz, _ := New(Config{"baduser", "badpass", server.URL, false, ""})
-	kiz.api.client = server.Client()
-	err := kiz.Login()
-	assert.Equal(t, err, NewAuthenticationError("Bad credentials"))
+	sc, err := newSpyClient("baduser", "badpass", server.URL, "", server.Client())
+	assert.NoError(t, err)
+	kiz := NewWithClient(sc)
+	err = kiz.Login()
+	assert.Equal(t, err, client.NewAuthenticationError("Bad credentials"))
 }
 
 func TestGoodLogin(t *testing.T) {
@@ -64,12 +54,14 @@ func TestGoodLogin(t *testing.T) {
 		rw.Write([]byte(`{"success":true,"roles":[{"name":"ENDUSER"}]}`))
 	}))
 	defer server.Close()
-	kiz, _ := New(Config{"gooduser", "goodpass", server.URL, false, ""})
-	kiz.api.client = server.Client()
-	err := kiz.Login()
+	sc, err := newSpyClient("gooduser", "goodpass", server.URL, "", server.Client())
+	assert.NoError(t, err)
+	kiz := NewWithClient(sc)
+	err = kiz.Login()
 	assert.Nil(t, err)
 }
 
+// helperLoadBytes loads test data from a file
 func helperLoadBytes(t *testing.T, name string) []byte {
 	path := filepath.Join("testdata", name) // relative path
 	bytes, err := ioutil.ReadFile(path)
@@ -83,7 +75,7 @@ func helperLoadBytes(t *testing.T, name string) []byte {
 // 		//rw.Write(helperLoadBytes(t, "getSetup.json"))
 // 	}))
 // 	defer server.Close()
-// 	kiz, _ := New(Config{"gooduser", "goodpass", server.URL, false, ""})
+// 	kiz, _ := New(Config{"gooduser", "goodpass", server.URL, ""})
 // 	kiz.api.client = server.Client()
 // 	_, err := kiz.getSetup()
 // 	assert.Nil(t, err)
@@ -95,8 +87,9 @@ func TestGetDevices(t *testing.T) {
 		rw.Write(helperLoadBytes(t, "getDevices.json"))
 	}))
 	defer server.Close()
-	kiz, _ := New(Config{"gooduser", "goodpass", server.URL, false, ""})
-	kiz.api.client = server.Client()
+	sc, err := newSpyClient("gooduser", "goodpass", server.URL, "", server.Client())
+	assert.NoError(t, err)
+	kiz := NewWithClient(sc)
 	devices, err := kiz.GetDevices()
 	assert.Nil(t, err)
 	assert.Equal(t, len(devices), 5)
@@ -108,8 +101,9 @@ func TestGetDevice(t *testing.T) {
 		rw.Write(helperLoadBytes(t, "getDevice.json"))
 	}))
 	defer server.Close()
-	kiz, _ := New(Config{"gooduser", "goodpass", server.URL, false, ""})
-	kiz.api.client = server.Client()
+	sc, err := newSpyClient("gooduser", "goodpass", server.URL, "", server.Client())
+	assert.NoError(t, err)
+	kiz := NewWithClient(sc)
 	device, err := kiz.GetDevice("io://1111-0000-4444/11784413")
 	assert.Nil(t, err)
 	assert.Equal(t, len(device.States), 5)
@@ -129,7 +123,7 @@ func TestDeviceFromListByLabel(t *testing.T) {
 	// case found
 	d, err := DeviceFromListByLabel("label1", devices)
 	assert.Nil(t, err)
-	assert.Equal(t, DeviceURLT("url1"), d.DeviceURL)
+	assert.Equal(t, DeviceURL("url1"), d.DeviceURL)
 
 	// case not found
 	_, err = DeviceFromListByLabel("bogus", devices)
@@ -140,17 +134,58 @@ func TestDeviceFromListByLabel(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestGetDeviceByTextMatchText(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, "/enduserAPI/setup/devices", req.URL.String())
+		rw.Write(helperLoadBytes(t, "getDevices.json"))
+	}))
+	defer server.Close()
+	sc, err := newSpyClient("gooduser", "goodpass", server.URL, "", server.Client())
+	assert.NoError(t, err)
+	kiz := NewWithClient(sc)
+	device, err := kiz.GetDeviceByText("fenetre1")
+	assert.Nil(t, err)
+	assert.Equal(t, device.Label, "Fenetre1")
+}
+
+func TestGetDeviceByTextURI(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, "/enduserAPI/setup/devices/io%3A%2F%2F1111-0000-4444%2F11784413", req.URL.String())
+		rw.Write(helperLoadBytes(t, "getDevice.json"))
+	}))
+	defer server.Close()
+	sc, err := newSpyClient("gooduser", "goodpass", server.URL, "", server.Client())
+	assert.NoError(t, err)
+	kiz := NewWithClient(sc)
+	device, err := kiz.GetDeviceByText("io://1111-0000-4444/11784413")
+	assert.Nil(t, err)
+	assert.Equal(t, device.Label, "Fenetre1")
+}
+
 func TestGetDeviceState(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "/enduserAPI/setup/devices/io%3A%2F%2F1111-0000-4444%2F12345678/states/core%3AOnOffState", req.URL.String())
 		rw.Write([]byte(`{"name": "core:OnOffState","type": 3,"value": "off"}`))
 	}))
 	defer server.Close()
-	kiz, _ := New(Config{"gooduser", "goodpass", server.URL, false, ""})
-	kiz.api.client = server.Client()
+	sc, err := newSpyClient("gooduser", "goodpass", server.URL, "", server.Client())
+	assert.NoError(t, err)
+	kiz := NewWithClient(sc)
 	state, err := kiz.GetDeviceState("io://1111-0000-4444/12345678", "core:OnOffState")
 	assert.Nil(t, err)
 	assert.Equal(t, "off", state.Value)
+}
+
+func TestRefreshStates(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, "/enduserAPI/setup/devices/states/refresh", req.URL.String())
+	}))
+	defer server.Close()
+	sc, err := newSpyClient("gooduser", "goodpass", server.URL, "", server.Client())
+	assert.NoError(t, err)
+	kiz := NewWithClient(sc)
+	err = kiz.RefreshStates()
+	assert.Nil(t, err)
 }
 
 func TestGetActionGroups(t *testing.T) {
@@ -159,23 +194,26 @@ func TestGetActionGroups(t *testing.T) {
 		rw.Write(helperLoadBytes(t, "getActionGroups.json"))
 	}))
 	defer server.Close()
-	kiz, _ := New(Config{"gooduser", "goodpass", server.URL, false, ""})
-	kiz.api.client = server.Client()
+	sc, err := newSpyClient("gooduser", "goodpass", server.URL, "", server.Client())
+	assert.NoError(t, err)
+	kiz := NewWithClient(sc)
 	actionGroups, err := kiz.GetActionGroups()
 	assert.Nil(t, err)
 	assert.Equal(t, len(actionGroups), 1)
 	assert.Equal(t, len(actionGroups[0].Actions), 2)
 }
 
-func TestRefreshStates(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		assert.Equal(t, "/enduserAPI/setup/devices/states/refresh", req.URL.String())
-	}))
-	defer server.Close()
-	kiz, _ := New(Config{"gooduser", "goodpass", server.URL, false, ""})
-	kiz.api.client = server.Client()
-	err := kiz.RefreshStates()
-	assert.Nil(t, err)
+func TestSupportsCommand(t *testing.T) {
+	goodCmdDef := CommandDefinition{
+		CommandName: "goodCmd",
+	}
+	device := Device{
+		Definition: DeviceDefinition{
+			Commands: []CommandDefinition{goodCmdDef},
+		},
+	}
+	assert.True(t, SupportsCommand(device, Command{Name: "goodCmd"}))
+	assert.False(t, SupportsCommand(device, Command{Name: "badCmd"}))
 }
 
 func TestExecute(t *testing.T) {
@@ -184,13 +222,14 @@ func TestExecute(t *testing.T) {
 		var ag ActionGroup
 		err := json.NewDecoder(req.Body).Decode(&ag)
 		assert.Nil(t, err)
-		assert.Equal(t, DeviceURLT("io://1111-0000-4444/12345678"), ag.Actions[0].DeviceURL)
+		assert.Equal(t, DeviceURL("io://1111-0000-4444/12345678"), ag.Actions[0].DeviceURL)
 		assert.Equal(t, "on", ag.Actions[0].Commands[0].Name)
 		rw.Write([]byte(`{"execId": "133a5c55-3655-5455-2355-c33e43535e55"}`))
 	}))
 	defer server.Close()
-	kiz, _ := New(Config{"gooduser", "goodpass", server.URL, false, ""})
-	kiz.api.client = server.Client()
+	sc, err := newSpyClient("gooduser", "goodpass", server.URL, "", server.Client())
+	assert.NoError(t, err)
+	kiz := NewWithClient(sc)
 	device := Device{
 		DeviceURL: "io://1111-0000-4444/12345678",
 		Definition: DeviceDefinition{
@@ -202,8 +241,12 @@ func TestExecute(t *testing.T) {
 		},
 	}
 	actionGroup, err := ActionGroupWithOneCommand(device, Command{Name: CmdOn})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	id, err := kiz.Execute(actionGroup)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, 36, len(string(id)))
+}
+
+func TestOn(t *testing.T) {
+
 }

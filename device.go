@@ -1,15 +1,15 @@
 package kizcool
 
-// DeviceURLT is the full device URL including prefix
+// DeviceURL is the full device URL including prefix
 // e.g. io://1111-0000-4444/12345678
-type DeviceURLT string
+type DeviceURL string
 
 // Device representation of a single device
 type Device struct {
 	CreationTime     int
 	LastUpdateTime   int
 	Label            string
-	DeviceURL        DeviceURLT
+	DeviceURL        DeviceURL
 	Shortcut         bool
 	ControllableName string
 	Definition       DeviceDefinition

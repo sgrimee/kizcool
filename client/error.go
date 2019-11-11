@@ -1,4 +1,4 @@
-package kizcool
+package client
 
 import "fmt"
 

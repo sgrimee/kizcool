@@ -49,6 +49,13 @@ func printText(w io.Writer, obj interface{}) (err error) {
 	switch t := obj.(type) {
 	default:
 		return fmt.Errorf("printText does not support type %T", t)
+	case []string:
+		ls := obj.([]string)
+		for _, s := range ls {
+			if _, err = io.WriteString(w, s+"\n"); err != nil {
+				return err
+			}
+		}
 	case string:
 		s := obj.(string)
 		if _, err = io.WriteString(w, s); err != nil {
@@ -72,7 +79,7 @@ func printText(w io.Writer, obj interface{}) (err error) {
 
 // printTextDevice prints useful values of a single device
 func printTextDevice(w io.Writer, d Device) (err error) {
-	wantedStates := map[StateNameT]bool{
+	wantedStates := map[StateName]bool{
 		"core:ClosureState":        true,
 		"core:OpenClosedState":     true,
 		"core:LightIntensityState": true,

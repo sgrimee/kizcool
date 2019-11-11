@@ -1,7 +1,7 @@
 package kizcool
 
-// ExecIDT is the id of an execution (job)
-type ExecIDT string
+// ExecID is the id of an execution (job)
+type ExecID string
 
 // ActionGroup is a list of Actions in sequence, with metadata. Think "scenario".
 type ActionGroup struct {
@@ -17,6 +17,6 @@ type ActionGroup struct {
 
 // Action defines a list of commands
 type Action struct {
-	DeviceURL DeviceURLT `json:"deviceURL,omitempty"`
-	Commands  []Command  `json:"commands,omitempty"`
+	DeviceURL DeviceURL `json:"deviceURL,omitempty"`
+	Commands  []Command `json:"commands,omitempty"`
 }

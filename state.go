@@ -7,22 +7,22 @@ type StateDefinition struct {
 	Values        []string
 }
 
-// StateNameT is the name of a State
-type StateNameT string
+// StateName is the name of a State
+type StateName string
 
-// StateTypeT has value 1 (int), 2 (float) or 3 (string)
-type StateTypeT int
+// StateType has value 1 (int), 2 (float) or 3 (string)
+type StateType int
 
 // States have types determining the value of their type
 const (
-	StateInt    StateTypeT = 1
-	StateFloat  StateTypeT = 2
-	StateString StateTypeT = 3
+	StateInt    StateType = 1
+	StateFloat  StateType = 2
+	StateString StateType = 3
 )
 
 // State encodes a device state
 type State struct {
-	Name  StateNameT
-	Type  StateTypeT
+	Name  StateName
+	Type  StateType
 	Value interface{}
 }

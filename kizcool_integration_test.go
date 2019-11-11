@@ -7,34 +7,35 @@ import (
 	"os"
 	"testing"
 
+	"github.com/sgrimee/kizcool/client"
+	"github.com/sgrimee/kizcool/config"
 	"github.com/stretchr/testify/assert"
 )
 
 var kiz *Kiz
 
-var config Config
-
 func TestMain(m *testing.M) {
-	cfg, err := GetConfig()
+	err := config.Read(false)
 	if err != nil {
 		log.Fatal(err)
 	}
-	config = cfg
+	kiz, err = New(config.Username(), config.Password(), config.BaseURL(), "")
+	if err != nil {
+		log.Fatal(err)
+	}
 	os.Exit(m.Run())
 }
 
-func TestIntegrationBadLogin(t *testing.T) {
-	badConfig := config
-	badConfig.Username = "baduser"
-	badConfig.Password = "badpass"
-	kiz, _ := New(badConfig)
-	err := kiz.Login()
-	assert.EqualError(t, err, "401: Bad credentials")
+func TestIntBadLogin(t *testing.T) {
+	k, err := New("baduser", "badpass", config.BaseURL(), "")
+	assert.NoError(t, err)
+	err = k.Login()
+	assert.Error(t, err)
+	_, ok := err.(*client.AuthenticationError)
+	assert.True(t, ok)
 }
 
-func TestIntegrationGoodLogin(t *testing.T) {
-	kiz, err := New(config)
-	assert.Nil(t, err)
-	err = kiz.Login()
-	assert.Nil(t, err)
+func TestIntGoodLogin(t *testing.T) {
+	err := kiz.Login()
+	assert.NoError(t, err)
 }
