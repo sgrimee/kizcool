@@ -1,4 +1,4 @@
-![](doc/homey.svg | width=100)
+<img src="doc/homey.svg" alt="logo" width="200"/>
 
 # kizcool
 [![CircleCI](https://circleci.com/gh/sgrimee/kizcool.svg?style=svg)](https://circleci.com/gh/sgrimee/kizcool)
