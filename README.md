@@ -1,9 +1,18 @@
-<img src="doc/homey.svg" alt="logo" width="200"/>
+<p align="center">
+  <img src="doc/homey.svg" alt="logo" width="64"/>
+  <h3 align="center">Kizcool</h3>
+  <p align="center">A CLI and go package to control devices from Velux, Somfy and other vendos.<p>
+  <p align="center"><a href="https://circleci.com/gh/sgrimee/kizcool"><img src="https://circleci.com/gh/sgrimee/kizcool.svg?style=shield" alt="Build Status"></a></p>
+</p>
 
-# kizcool
-[![CircleCI](https://circleci.com/gh/sgrimee/kizcool.svg?style=svg)](https://circleci.com/gh/sgrimee/kizcool)
+# Get kizcool
 
-**A go package and CLI tool to control IO Velux devices.**
+```
+go get github.com/sgrimee/kizcool/kizcli
+kizcli configure
+kizcli get devices
+...
+```
 
 ## Supported gateways
 
@@ -17,17 +26,6 @@ Support is provided for the following devices:
 - Velux Integra spotlight: [KRA-100](https://www.amazon.fr/VELUX-integra-fen%C3%AAtre-%C3%A9clairage-kRA-100/dp/B00N33FKGA) (hard to find)
 
 However, the Overkiz system supports many more devices from several vendors. Some may work out of the box. Support for others should be easy to add. Please file an issue to report other working devices or request the addition of new devices.
-
-## Command-line application
-
-An executable app called `kizcli` allows control of the devices from the command line.
-
-```
-go get github.com/sgrimee/kizcool/kizcli
-kizcli configure
-kizcli get devices
-...
-```
 
 ## Package documentation
 
