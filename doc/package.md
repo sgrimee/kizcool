@@ -184,9 +184,9 @@ caching of sessions
 #### func  NewWithClient
 
 ```go
-func NewWithClient(c client.APIClient) *Kiz
+func NewWithClient(c client.APIClient) (*Kiz, error)
 ```
-NewWithClient returns a Kiz with the given pre-initialised APIClient
+NewWithClient returns an initialized Kiz
 
 #### func (*Kiz) Close
 
@@ -274,6 +274,14 @@ func (k *Kiz) RefreshStates() error
 ```
 RefreshStates tells the server to refresh states. But not sure yet what it
 really means`?
+
+#### func (*Kiz) SessionID
+
+```go
+func (k *Kiz) SessionID() string
+```
+SessionID is the latest known sessionID value It can be used for caching
+sessions externally.
 
 #### func (*Kiz) SetClosure
 

@@ -1,7 +1,7 @@
 <p align="center">
   <img src="doc/homey.svg" alt="logo" width="64"/>
   <h3 align="center">Kizcool</h3>
-  <p align="center">A CLI and go package to control devices from [Velux](https://www.velux.com/), [Somfy](https://www.somfy.com/) and other vendors using the [Overkiz](https://www.overkiz.com/) platform.<p>
+  <p align="center">A CLI and go package to control devices from <a href="https://www.velux.com/">Velux</a>, <a href="https://www.somfy.com/">Somfy</a> and other vendors using the <a href="https://www.overkiz.com/">Overkiz</a> platform.<p>
   <p align="center"><a href="https://circleci.com/gh/sgrimee/kizcool"><img src="https://circleci.com/gh/sgrimee/kizcool.svg?style=shield" alt="Build Status"></a></p>
 </p>
 
