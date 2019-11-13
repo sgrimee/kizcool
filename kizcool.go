@@ -22,17 +22,21 @@ func New(username, password, baseURL, sessionID string) (*Kiz, error) {
 	if err != nil {
 		return nil, err
 	}
+	return NewWithClient(clt)
+}
+
+// NewWithClient returns an initialized Kiz
+func NewWithClient(c client.APIClient) (*Kiz, error) {
 	k := Kiz{
-		clt: clt,
+		clt: c,
 	}
 	return &k, nil
 }
 
-// NewWithClient returns a Kiz with the given pre-initialised APIClient
-func NewWithClient(c client.APIClient) *Kiz {
-	return &Kiz{
-		clt: c,
-	}
+// SessionID is the latest known sessionID value
+// It can be used for caching sessions externally.
+func (k *Kiz) SessionID() string {
+	return k.clt.SessionID()
 }
 
 // Login to the server

@@ -14,18 +14,18 @@ import (
 )
 
 type SpyClient struct {
-	client.Client
+	client.APIClient
 }
 
-func newSpyClient(username, password, baseURL, sessionID string, hc *http.Client) (SpyClient, error) {
+func newSpyClient(username, password, baseURL, sessionID string, hc *http.Client) (client.APIClient, error) {
 	realClient, err := client.NewWithHC(username, password, baseURL, sessionID, hc)
 	if err != nil {
-		return SpyClient{}, nil
+		return nil, err
 	}
 	sc := SpyClient{
-		Client: realClient,
+		realClient,
 	}
-	return sc, nil
+	return &sc, nil
 }
 
 func TestBadLogin(t *testing.T) {
@@ -37,7 +37,7 @@ func TestBadLogin(t *testing.T) {
 	defer server.Close()
 	sc, err := newSpyClient("baduser", "badpass", server.URL, "", server.Client())
 	assert.NoError(t, err)
-	kiz := NewWithClient(sc)
+	kiz, _ := NewWithClient(sc)
 	err = kiz.Login()
 	assert.Equal(t, err, client.NewAuthenticationError("Bad credentials"))
 }
@@ -56,7 +56,7 @@ func TestGoodLogin(t *testing.T) {
 	defer server.Close()
 	sc, err := newSpyClient("gooduser", "goodpass", server.URL, "", server.Client())
 	assert.NoError(t, err)
-	kiz := NewWithClient(sc)
+	kiz, _ := NewWithClient(sc)
 	err = kiz.Login()
 	assert.Nil(t, err)
 }
@@ -89,7 +89,7 @@ func TestGetDevices(t *testing.T) {
 	defer server.Close()
 	sc, err := newSpyClient("gooduser", "goodpass", server.URL, "", server.Client())
 	assert.NoError(t, err)
-	kiz := NewWithClient(sc)
+	kiz, _ := NewWithClient(sc)
 	devices, err := kiz.GetDevices()
 	assert.Nil(t, err)
 	assert.Equal(t, len(devices), 5)
@@ -103,7 +103,7 @@ func TestGetDevice(t *testing.T) {
 	defer server.Close()
 	sc, err := newSpyClient("gooduser", "goodpass", server.URL, "", server.Client())
 	assert.NoError(t, err)
-	kiz := NewWithClient(sc)
+	kiz, _ := NewWithClient(sc)
 	device, err := kiz.GetDevice("io://1111-0000-4444/11784413")
 	assert.Nil(t, err)
 	assert.Equal(t, len(device.States), 5)
@@ -142,7 +142,7 @@ func TestGetDeviceByTextMatchText(t *testing.T) {
 	defer server.Close()
 	sc, err := newSpyClient("gooduser", "goodpass", server.URL, "", server.Client())
 	assert.NoError(t, err)
-	kiz := NewWithClient(sc)
+	kiz, _ := NewWithClient(sc)
 	device, err := kiz.GetDeviceByText("fenetre1")
 	assert.Nil(t, err)
 	assert.Equal(t, device.Label, "Fenetre1")
@@ -156,7 +156,7 @@ func TestGetDeviceByTextURI(t *testing.T) {
 	defer server.Close()
 	sc, err := newSpyClient("gooduser", "goodpass", server.URL, "", server.Client())
 	assert.NoError(t, err)
-	kiz := NewWithClient(sc)
+	kiz, _ := NewWithClient(sc)
 	device, err := kiz.GetDeviceByText("io://1111-0000-4444/11784413")
 	assert.Nil(t, err)
 	assert.Equal(t, device.Label, "Fenetre1")
@@ -170,7 +170,7 @@ func TestGetDeviceState(t *testing.T) {
 	defer server.Close()
 	sc, err := newSpyClient("gooduser", "goodpass", server.URL, "", server.Client())
 	assert.NoError(t, err)
-	kiz := NewWithClient(sc)
+	kiz, _ := NewWithClient(sc)
 	state, err := kiz.GetDeviceState("io://1111-0000-4444/12345678", "core:OnOffState")
 	assert.Nil(t, err)
 	assert.Equal(t, "off", state.Value)
@@ -183,7 +183,7 @@ func TestRefreshStates(t *testing.T) {
 	defer server.Close()
 	sc, err := newSpyClient("gooduser", "goodpass", server.URL, "", server.Client())
 	assert.NoError(t, err)
-	kiz := NewWithClient(sc)
+	kiz, _ := NewWithClient(sc)
 	err = kiz.RefreshStates()
 	assert.Nil(t, err)
 }
@@ -196,7 +196,7 @@ func TestGetActionGroups(t *testing.T) {
 	defer server.Close()
 	sc, err := newSpyClient("gooduser", "goodpass", server.URL, "", server.Client())
 	assert.NoError(t, err)
-	kiz := NewWithClient(sc)
+	kiz, _ := NewWithClient(sc)
 	actionGroups, err := kiz.GetActionGroups()
 	assert.Nil(t, err)
 	assert.Equal(t, len(actionGroups), 1)
@@ -229,7 +229,7 @@ func TestExecute(t *testing.T) {
 	defer server.Close()
 	sc, err := newSpyClient("gooduser", "goodpass", server.URL, "", server.Client())
 	assert.NoError(t, err)
-	kiz := NewWithClient(sc)
+	kiz, _ := NewWithClient(sc)
 	device := Device{
 		DeviceURL: "io://1111-0000-4444/12345678",
 		Definition: DeviceDefinition{

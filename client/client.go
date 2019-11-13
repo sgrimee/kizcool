@@ -51,16 +51,16 @@ type Client struct {
 
 // New returns a new Client
 // sessionID is optional and used when caching sessions externally
-func New(username, password, baseURL, sessionID string) (Client, error) {
+func New(username, password, baseURL, sessionID string) (APIClient, error) {
 	hc := http.Client{}
 	return NewWithHC(username, password, baseURL, sessionID, &hc)
 }
 
 // NewWithHC returns a new Client, injecting the HTTP client to use. See New.
-func NewWithHC(username, password, baseURL, sessionID string, hc *http.Client) (Client, error) {
+func NewWithHC(username, password, baseURL, sessionID string, hc *http.Client) (APIClient, error) {
 	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	if err != nil {
-		return Client{}, err
+		return nil, err
 	}
 	if sessionID != "" {
 		c := http.Cookie{
@@ -69,28 +69,29 @@ func NewWithHC(username, password, baseURL, sessionID string, hc *http.Client) (
 		}
 		url, err := url.Parse(baseURL)
 		if err != nil {
-			return Client{}, err
+			return nil, err
 		}
 		jar.SetCookies(url, []*http.Cookie{&c})
 	}
 	hc.Jar = jar
 	client := Client{
-		username: username,
-		password: password,
-		baseURL:  baseURL,
-		hc:       hc,
+		username:  username,
+		password:  password,
+		baseURL:   baseURL,
+		sessionID: sessionID,
+		hc:        hc,
 	}
-	return client, nil
+	return &client, nil
 }
 
 // SessionID is the latest known sessionID value
 // It can be used for caching sessions externally.
-func (c Client) SessionID() string {
+func (c *Client) SessionID() string {
 	return c.sessionID
 }
 
 // Login to the api server
-func (c Client) Login() error {
+func (c *Client) Login() error {
 	formData := url.Values{"userId": {c.username}, "userPassword": {c.password}}
 
 	resp, err := c.hc.PostForm(c.baseURL+"/enduserAPI/login", formData)
@@ -112,7 +113,7 @@ func (c Client) Login() error {
 
 // GetWithAuth performs a GET request for the given query which is appended
 // to the baseURL. It tries to renew the session ID if needed.
-func (c Client) GetWithAuth(query string) (*http.Response, error) {
+func (c *Client) GetWithAuth(query string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", c.baseURL+query, nil)
 	if err != nil {
 		return nil, err
@@ -122,7 +123,7 @@ func (c Client) GetWithAuth(query string) (*http.Response, error) {
 
 // DoWithAuth performs the given request. If an authentication error occurs,
 // it tries to login to renew the sessionID, then tries the request again.
-func (c Client) DoWithAuth(req *http.Request) (*http.Response, error) {
+func (c *Client) DoWithAuth(req *http.Request) (*http.Response, error) {
 	resp, err := c.hc.Do(req)
 	if err != nil {
 		return nil, err
@@ -130,6 +131,7 @@ func (c Client) DoWithAuth(req *http.Request) (*http.Response, error) {
 	if err := checkStatusOk(resp); err != nil {
 		switch err.(type) {
 		case *AuthenticationError:
+			fmt.Println("Need to re-authenticate")
 			if err := c.Login(); err != nil {
 				return nil, err
 			}
@@ -142,12 +144,13 @@ func (c Client) DoWithAuth(req *http.Request) (*http.Response, error) {
 			return nil, err
 		}
 	}
+	fmt.Println("Using cached sessionID")
 	return resp, nil
 }
 
 // RefreshStates tells the server to refresh states.
 // But not sure yet what it really means`?
-func (c Client) RefreshStates() error {
+func (c *Client) RefreshStates() error {
 	req, err := http.NewRequest(http.MethodPut, c.baseURL+"/enduserAPI/setup/devices/states/refresh", nil)
 	if err != nil {
 		return err
@@ -161,7 +164,7 @@ func (c Client) RefreshStates() error {
 
 // Execute initiates the execution of a group of actions
 // json needs to be marshalled from an ActionGroup
-func (c Client) Execute(json []byte) (*http.Response, error) {
+func (c *Client) Execute(json []byte) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodPost, c.baseURL+"/enduserAPI/exec/apply", bytes.NewBuffer(json))
 	if err != nil {
 		return nil, err

@@ -1,18 +1,23 @@
 <p align="center">
   <img src="doc/homey.svg" alt="logo" width="64"/>
   <h3 align="center">Kizcool</h3>
-  <p align="center">A CLI and go package to control devices from Velux, Somfy and other vendos.<p>
+  <p align="center">A CLI and go package to control devices from [Velux](https://www.velux.com/), [Somfy](https://www.somfy.com/) and other vendors using the [Overkiz](https://www.overkiz.com/) platform.<p>
   <p align="center"><a href="https://circleci.com/gh/sgrimee/kizcool"><img src="https://circleci.com/gh/sgrimee/kizcool.svg?style=shield" alt="Build Status"></a></p>
 </p>
 
 # Get kizcool
 
 ```
-go get github.com/sgrimee/kizcool/kizcli
+go get github.com/sgrimee/kizcool
+cd $GOPATH/src/github.com/sgrimee/kizcool/kizcli
+go get
+go install
 kizcli configure
-kizcli get devices
-...
 ```
+
+## Go package documentation
+
+A static version of the godoc can be found [here](doc/package.md).
 
 ## Supported gateways
 
@@ -27,9 +32,9 @@ Support is provided for the following devices:
 
 However, the Overkiz system supports many more devices from several vendors. Some may work out of the box. Support for others should be easy to add. Please file an issue to report other working devices or request the addition of new devices.
 
-## Package documentation
+## Supported platforms
 
-A static version of the godoc can be found [here](doc/package.md).
+This should work wherever go works. Tested on mac and linux. Efforts were made to support windows but it is not tested.
 
 ## Roadmap
 
