@@ -5,6 +5,14 @@
   <p align="center"><a href="https://circleci.com/gh/sgrimee/kizcool"><img src="https://circleci.com/gh/sgrimee/kizcool.svg?style=shield" alt="Build Status"></a></p>
 </p>
 
+## Components
+
+Executable `kizcool/exe/kizcmd` is a command-line utility to control devices.
+
+Package `kizcool` provides a high-level client with structs and strong typing.
+
+Package `kizcool/client` provides a lower-level api client that returns the raw responses from the server without parsing.
+
 ## Get kizcool command line tool
 
 ```
@@ -14,10 +22,6 @@ go get
 go install
 kizcmd configure
 ```
-
-## Go package documentation
-
-A static version of the godoc can be found [here](doc/package.md).
 
 ## Supported gateways
 
@@ -35,6 +39,10 @@ However, the Overkiz system supports many more devices from several vendors. Som
 ## Supported platforms
 
 This should work wherever go works. Tested on mac and linux. Efforts were made to support windows but it is not tested.
+
+## Go package documentation
+
+A static version of the godoc can be found [here](doc/package.md).
 
 ## Roadmap
 
