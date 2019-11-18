@@ -2,8 +2,10 @@ package client
 
 import (
 	"errors"
+	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -32,4 +34,46 @@ func TestCheckStatusOk(t *testing.T) {
 			assert.Equal(t, tt.e, checkStatusOk(w.Result()))
 		})
 	}
+}
+
+func TestNew(t *testing.T) {
+	const sID = "myTestSessionID"
+	c, err := New("user", "pass", "http://dummy.org", sID)
+	assert.NoError(t, err)
+	assert.Equal(t, sID, c.SessionID())
+}
+
+func TestNewWithHTTPClientGetsSessionCookie(t *testing.T) {
+	const sID = "myTestSessionID"
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, "/enduserAPI/login", req.URL.String())
+		cookie := http.Cookie{
+			Name:     "JSESSIONID",
+			Value:    sID,
+			Expires:  time.Now().AddDate(0, 0, 1),
+			HttpOnly: true,
+			Secure:   false,
+		}
+		http.SetCookie(rw, &cookie)
+		rw.Write([]byte(`{"success":true,"roles":[{"name":"ENDUSER"}]}`))
+	}))
+	defer server.Close()
+	c, err := NewWithHTTPClient("user", "pass", server.URL, "", server.Client())
+	assert.NoError(t, err)
+	assert.Equal(t, "", c.SessionID())
+	err = c.Login()
+	assert.NoError(t, err)
+	assert.Equal(t, sID, c.SessionID())
+}
+
+func TestRegisterListener(t *testing.T) {
+	t.Skip("Need to write test")
+}
+
+func TestUnregisterListener(t *testing.T) {
+	t.Skip("Need to write test")
+}
+
+func TestFetchEvents(t *testing.T) {
+	t.Skip("Need to write test")
 }

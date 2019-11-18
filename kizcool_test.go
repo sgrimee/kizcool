@@ -18,7 +18,7 @@ type SpyClient struct {
 }
 
 func newSpyClient(username, password, baseURL, sessionID string, hc *http.Client) (client.APIClient, error) {
-	realClient, err := client.NewWithHC(username, password, baseURL, sessionID, hc)
+	realClient, err := client.NewWithHTTPClient(username, password, baseURL, sessionID, hc)
 	if err != nil {
 		return nil, err
 	}

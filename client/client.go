@@ -14,6 +14,9 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
+// ListenerID is used to track event listeners
+type ListenerID string
+
 // checkStatusOk performs simple tests to ensure the request was successful
 // if an error occured, try to qualify it then return it. In this case the Body of the
 // response will not be usable later on.
@@ -42,58 +45,62 @@ func checkStatusOk(resp *http.Response) error {
 // Client provides methods to make http requests to the api server while making the
 // authentification and session ID renewal transparent.
 type Client struct {
-	username  string
-	password  string
-	baseURL   string
-	sessionID string
-	hc        *http.Client
+	username string
+	password string
+	baseURL  string
+	hc       *http.Client
 }
 
 // New returns a new Client
 // sessionID is optional and used when caching sessions externally
 func New(username, password, baseURL, sessionID string) (APIClient, error) {
 	hc := http.Client{}
-	return NewWithHC(username, password, baseURL, sessionID, &hc)
+	return NewWithHTTPClient(username, password, baseURL, sessionID, &hc)
 }
 
-// NewWithHC returns a new Client, injecting the HTTP client to use. See New.
-func NewWithHC(username, password, baseURL, sessionID string, hc *http.Client) (APIClient, error) {
+// NewWithHTTPClient returns a new Client, injecting the HTTP client to use. See New.
+func NewWithHTTPClient(username, password, baseURL, sessionID string, hc *http.Client) (APIClient, error) {
 	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	if err != nil {
 		return nil, err
 	}
+	url, err := url.Parse(baseURL)
 	if sessionID != "" {
-		c := http.Cookie{
+		cookie := http.Cookie{
 			Name:  "JSESSIONID",
 			Value: sessionID,
 		}
-		url, err := url.Parse(baseURL)
 		if err != nil {
 			return nil, err
 		}
-		jar.SetCookies(url, []*http.Cookie{&c})
+		jar.SetCookies(url, []*http.Cookie{&cookie})
 	}
 	hc.Jar = jar
 	client := Client{
-		username:  username,
-		password:  password,
-		baseURL:   baseURL,
-		sessionID: sessionID,
-		hc:        hc,
+		username: username,
+		password: password,
+		baseURL:  baseURL,
+		hc:       hc,
 	}
 	return &client, nil
 }
 
 // SessionID is the latest known sessionID value
 // It can be used for caching sessions externally.
+// Returns an empty string if the session cookie is not set
 func (c *Client) SessionID() string {
-	return c.sessionID
+	u, _ := url.Parse(c.baseURL + "/enduserAPI")
+	for _, cookie := range c.hc.Jar.Cookies(u) {
+		if (cookie.Name == "JSESSIONID") && (cookie.Value != "") {
+			return cookie.Value
+		}
+	}
+	return ""
 }
 
-// Login to the api server
+// Login to the api server to obtain a session ID cookie
 func (c *Client) Login() error {
 	formData := url.Values{"userId": {c.username}, "userPassword": {c.password}}
-
 	resp, err := c.hc.PostForm(c.baseURL+"/enduserAPI/login", formData)
 	if err != nil {
 		return err
@@ -102,9 +109,9 @@ func (c *Client) Login() error {
 	if err := checkStatusOk(resp); err != nil {
 		return err
 	}
+	u, _ := url.Parse(c.baseURL)
 	for _, cookie := range resp.Cookies() {
 		if (cookie.Name == "JSESSIONID") && (cookie.Value != "") {
-			c.sessionID = cookie.Value
 			return nil
 		}
 	}
@@ -131,7 +138,6 @@ func (c *Client) DoWithAuth(req *http.Request) (*http.Response, error) {
 	if err := checkStatusOk(resp); err != nil {
 		switch err.(type) {
 		case *AuthenticationError:
-			fmt.Println("Need to re-authenticate")
 			if err := c.Login(); err != nil {
 				return nil, err
 			}
@@ -144,7 +150,6 @@ func (c *Client) DoWithAuth(req *http.Request) (*http.Response, error) {
 			return nil, err
 		}
 	}
-	fmt.Println("Using cached sessionID")
 	return resp, nil
 }
 
@@ -175,4 +180,40 @@ func (c *Client) Execute(json []byte) (*http.Response, error) {
 		return nil, err
 	}
 	return resp, nil
+}
+
+// RegisterListener registers for events and returns a listener id
+func (c *Client) RegisterListener() (ListenerID, error) {
+	req, err := http.NewRequest(http.MethodPost, c.baseURL+"/events/register", nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := c.DoWithAuth(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	type Result struct {
+		lid ListenerID
+	}
+	var result Result
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+	return result.lid, nil
+}
+
+// UnregisterListener unregisters the listener
+func (c *Client) UnregisterListener(l ListenerID) error {
+	query := fmt.Sprintf("%s/events/%s/unregister", c.baseURL, l)
+	req, err := http.NewRequest(http.MethodPost, query, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := c.DoWithAuth(req)
+	if err != nil {
+		return err
+	}
+	resp.Body.Close()
+	return nil
 }
