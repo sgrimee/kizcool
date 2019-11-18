@@ -1,4 +1,5 @@
 // Package client provides a low-level client to the overkiz api
+// JSON responses are not unmarshalled and are returned as-is.
 package client
 
 import (
@@ -109,7 +110,6 @@ func (c *Client) Login() error {
 	if err := checkStatusOk(resp); err != nil {
 		return err
 	}
-	u, _ := url.Parse(c.baseURL)
 	for _, cookie := range resp.Cookies() {
 		if (cookie.Name == "JSESSIONID") && (cookie.Value != "") {
 			return nil
@@ -153,6 +153,24 @@ func (c *Client) DoWithAuth(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
+// GetDevices returns the raw response to retrieving all devices
+func (c *Client) GetDevices() (*http.Response, error) {
+	return c.GetWithAuth("/enduserAPI/setup/devices")
+}
+
+// GetDevice returns the raw response to retrieving one device by URL
+func (c *Client) GetDevice(deviceURL string) (*http.Response, error) {
+	query := "/enduserAPI/setup/devices/" + url.QueryEscape(deviceURL)
+	return c.GetWithAuth(query)
+}
+
+// GetDeviceState returns the current state with name for the device with URL deviceURL
+func (c *Client) GetDeviceState(deviceURL, stateName string) (*http.Response, error) {
+	query := "/enduserAPI/setup/devices/" + url.QueryEscape(deviceURL) +
+		"/states/" + url.QueryEscape(stateName)
+	return c.GetWithAuth(query)
+}
+
 // RefreshStates tells the server to refresh states.
 // But not sure yet what it really means`?
 func (c *Client) RefreshStates() error {
@@ -183,7 +201,7 @@ func (c *Client) Execute(json []byte) (*http.Response, error) {
 }
 
 // RegisterListener registers for events and returns a listener id
-func (c *Client) RegisterListener() (ListenerID, error) {
+func (c *Client) RegisterListener() (string, error) {
 	req, err := http.NewRequest(http.MethodPost, c.baseURL+"/events/register", nil)
 	if err != nil {
 		return "", err
@@ -194,17 +212,17 @@ func (c *Client) RegisterListener() (ListenerID, error) {
 	}
 	defer resp.Body.Close()
 	type Result struct {
-		lid ListenerID
+		ID string
 	}
 	var result Result
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return "", err
 	}
-	return result.lid, nil
+	return result.ID, nil
 }
 
 // UnregisterListener unregisters the listener
-func (c *Client) UnregisterListener(l ListenerID) error {
+func (c *Client) UnregisterListener(l string) error {
 	query := fmt.Sprintf("%s/events/%s/unregister", c.baseURL, l)
 	req, err := http.NewRequest(http.MethodPost, query, nil)
 	if err != nil {

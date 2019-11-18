@@ -5,14 +5,14 @@
   <p align="center"><a href="https://circleci.com/gh/sgrimee/kizcool"><img src="https://circleci.com/gh/sgrimee/kizcool.svg?style=shield" alt="Build Status"></a></p>
 </p>
 
-# Get kizcool
+## Get kizcool command line tool
 
 ```
 go get github.com/sgrimee/kizcool
-cd $GOPATH/src/github.com/sgrimee/kizcool/kizcli
+cd $GOPATH/src/github.com/sgrimee/kizcool/exe/kizcmd
 go get
 go install
-kizcli configure
+kizcmd configure
 ```
 
 ## Go package documentation

@@ -67,13 +67,31 @@ func TestNewWithHTTPClientGetsSessionCookie(t *testing.T) {
 }
 
 func TestRegisterListener(t *testing.T) {
-	t.Skip("Need to write test")
+	const lid = "77777777-3333-5555-2222-cccccccccccc"
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, "/events/register", req.URL.String())
+		rw.Write([]byte(`{"id":"` + lid + `"}`))
+	}))
+	defer server.Close()
+	c, err := NewWithHTTPClient("user", "pass", server.URL, "", server.Client())
+	assert.NoError(t, err)
+	l, err := c.RegisterListener()
+	assert.NoError(t, err)
+	assert.Equal(t, lid, l)
 }
 
 func TestUnregisterListener(t *testing.T) {
-	t.Skip("Need to write test")
+	const lid = "77777777-3333-5555-2222-cccccccccccc"
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, "/events/"+lid+"/unregister", req.URL.String())
+	}))
+	defer server.Close()
+	c, err := NewWithHTTPClient("user", "pass", server.URL, "", server.Client())
+	assert.NoError(t, err)
+	err = c.UnregisterListener(lid)
+	assert.NoError(t, err)
 }
 
 func TestFetchEvents(t *testing.T) {
-	t.Skip("Need to write test")
+	t.Skip("Implement me")
 }

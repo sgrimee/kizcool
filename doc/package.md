@@ -2,8 +2,8 @@
 --
     import "github.com/sgrimee/kizcool"
 
-Package kizcool provides a client to the Overkiz IoT API, used by velux, somfy
-and other vendors to control velux devices with a Tahoma box.
+Package kizcool provides a high-level client to the Overkiz IoT API, used by
+velux, somfy and other vendors to control velux devices with a Tahoma box.
 
 ## Usage
 
@@ -171,7 +171,7 @@ type Kiz struct {
 }
 ```
 
-Kiz provides high-level methods and structs to interact with the server.
+Kiz high-level client
 
 #### func  New
 
@@ -273,7 +273,7 @@ Open opens a device
 func (k *Kiz) RefreshStates() error
 ```
 RefreshStates tells the server to refresh states. But not sure yet what it
-really means`?
+really does...
 
 #### func (*Kiz) SessionID
 

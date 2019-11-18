@@ -3,14 +3,13 @@ package kizcool
 import (
 	"encoding/json"
 	"errors"
-	"net/url"
 	"regexp"
 	"strings"
 
 	"github.com/sgrimee/kizcool/client"
 )
 
-// Kiz provides high-level methods and structs to interact with the server.
+// Kiz high-level client
 type Kiz struct {
 	clt client.APIClient
 }
@@ -46,7 +45,7 @@ func (k *Kiz) Login() error {
 
 // GetDevices returns the list of devices
 func (k *Kiz) GetDevices() ([]Device, error) {
-	resp, err := k.clt.GetWithAuth("/enduserAPI/setup/devices")
+	resp, err := k.clt.GetDevices()
 	if err != nil {
 		return nil, err
 	}
@@ -58,8 +57,7 @@ func (k *Kiz) GetDevices() ([]Device, error) {
 
 // GetDevice returns a single device
 func (k *Kiz) GetDevice(deviceURL DeviceURL) (Device, error) {
-	query := "/enduserAPI/setup/devices/" + url.QueryEscape(string(deviceURL))
-	resp, err := k.clt.GetWithAuth(query)
+	resp, err := k.clt.GetDevice(string(deviceURL))
 	if err != nil {
 		return Device{}, err
 	}
@@ -113,9 +111,7 @@ func (k *Kiz) GetDeviceByText(text string) (Device, error) {
 
 // GetDeviceState returns the current state with name stateName for the device with URL deviceURL
 func (k *Kiz) GetDeviceState(deviceURL DeviceURL, stateName StateName) (State, error) {
-	query := "/enduserAPI/setup/devices/" + url.QueryEscape(string(deviceURL)) +
-		"/states/" + url.QueryEscape(string(stateName))
-	resp, err := k.clt.GetWithAuth(query)
+	resp, err := k.clt.GetDeviceState(string(deviceURL), string(stateName))
 	if err != nil {
 		return State{}, err
 	}
@@ -126,7 +122,7 @@ func (k *Kiz) GetDeviceState(deviceURL DeviceURL, stateName StateName) (State, e
 }
 
 // RefreshStates tells the server to refresh states.
-// But not sure yet what it really means`?
+// But not sure yet what it really does...
 func (k *Kiz) RefreshStates() error {
 	return k.clt.RefreshStates()
 }

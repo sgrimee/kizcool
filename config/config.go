@@ -2,8 +2,6 @@
 package config
 
 import (
-	"fmt"
-
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
@@ -79,7 +77,6 @@ func Read(create bool) error {
 
 // Write saves the current config to file
 func Write() error {
-	fmt.Printf("Writing to config file: %s\n", viper.ConfigFileUsed())
 	return viper.WriteConfig()
 }
 

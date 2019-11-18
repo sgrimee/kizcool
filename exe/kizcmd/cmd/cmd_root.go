@@ -13,9 +13,9 @@ var kiz *kizcool.Kiz
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "kizcli",
+	Use:   "kizcmd",
 	Short: "Overkiz command-line client",
-	Long:  `kizclient implements a partial client for the Overkiz home automation api.`,
+	Long:  `kizcmd implements a partial client for the Overkiz home automation api.`,
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.

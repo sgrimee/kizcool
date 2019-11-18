@@ -10,7 +10,7 @@ var deviceCmd = &cobra.Command{
 	Use:   "device",
 	Short: "Get a single device",
 	Long: `Get infos on a single device identified by its device url or label (case insensitive)
-	kizclient get device "io://1111-0000-4444/15332221"`,
+	kizcmd get device "io://1111-0000-4444/15332221"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
 			log.Fatal("You must specify a device.")
