@@ -11,6 +11,7 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
+	"sync"
 
 	"golang.org/x/net/publicsuffix"
 )
@@ -18,10 +19,12 @@ import (
 // Client provides methods to make http requests to the api server while making the
 // authentification and session ID renewal transparent.
 type Client struct {
-	username   string
-	password   string
-	baseURL    string
-	hc         *http.Client
+	username string
+	password string
+	baseURL  string
+	hc       *http.Client
+
+	mux        sync.Mutex
 	listenerID string
 }
 
@@ -183,7 +186,16 @@ func (c *Client) Execute(json []byte) (*http.Response, error) {
 
 // SetListenerID overrides the stored listenerID.
 func (c *Client) SetListenerID(listenerID string) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
 	c.listenerID = listenerID
+}
+
+// ListenerID returns the stored listenerID.
+func (c *Client) ListenerID() string {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	return c.listenerID
 }
 
 // registerListener registers for events and stores the listener id
@@ -210,10 +222,10 @@ func (c *Client) registerListener() error {
 
 // unregisterListener unregisters the listener
 func (c *Client) unregisterListener() error {
-	if c.listenerID == "" {
+	if c.ListenerID() == "" {
 		return nil
 	}
-	query := fmt.Sprintf("%s/events/%s/unregister", c.baseURL, c.listenerID)
+	query := fmt.Sprintf("%s/events/%s/unregister", c.baseURL, c.ListenerID())
 	req, err := http.NewRequest(http.MethodPost, query, nil)
 	if err != nil {
 		return err
@@ -223,7 +235,7 @@ func (c *Client) unregisterListener() error {
 		return err
 	}
 	resp.Body.Close()
-	c.listenerID = ""
+	c.SetListenerID("")
 	return nil
 }
 
@@ -242,18 +254,18 @@ func (c *Client) pollEventsWithID(lid string) (*http.Response, error) {
 
 // PollEvents checks for events, using the saved listener and refreshing it if needed
 func (c *Client) PollEvents() (*http.Response, error) {
-	if c.listenerID == "" {
+	if c.ListenerID() == "" {
 		if err := c.registerListener(); err != nil {
 			return nil, err
 		}
 	}
-	resp, err := c.pollEventsWithID(c.listenerID)
+	resp, err := c.pollEventsWithID(c.ListenerID())
 	if err != nil {
 		if _, ok := err.(*NoRegisteredEventListenerError); ok {
 			if err := c.registerListener(); err != nil {
 				return nil, err
 			}
-			if resp, err = c.pollEventsWithID(c.listenerID); err != nil {
+			if resp, err = c.pollEventsWithID(c.ListenerID()); err != nil {
 				return nil, err
 			}
 		}

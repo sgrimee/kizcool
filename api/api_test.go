@@ -92,9 +92,9 @@ func TestRegisterListener(t *testing.T) {
 	defer server.Close()
 	c, err := NewWithHTTPClient("user", "pass", server.URL, "", server.Client())
 	assert.NoError(t, err)
-	assert.Equal(t, "", c.listenerID)
+	assert.Equal(t, "", c.ListenerID())
 	assert.NoError(t, c.registerListener())
-	assert.Equal(t, lid, c.listenerID)
+	assert.Equal(t, lid, c.ListenerID())
 }
 
 func TestUnregisterListener(t *testing.T) {
@@ -107,7 +107,7 @@ func TestUnregisterListener(t *testing.T) {
 	assert.NoError(t, err)
 	err = c.unregisterListener()
 	assert.NoError(t, err)
-	assert.Equal(t, "", c.listenerID)
+	assert.Equal(t, "", c.ListenerID())
 }
 
 func TestPollEventsWithIDGood(t *testing.T) {
@@ -173,20 +173,20 @@ func TestPollEventsDoesRegisterListener(t *testing.T) {
 	c, err := NewWithHTTPClient("gooduser", "goodpass", server.URL, "", server.Client())
 	assert.NoError(t, err)
 
-	c.listenerID = ""
+	c.SetListenerID("")
 	_, err = c.PollEvents()
 	assert.NoError(t, err)
-	assert.Equal(t, validLID, c.listenerID)
+	assert.Equal(t, validLID, c.ListenerID())
 
-	c.listenerID = expiredLID
+	c.SetListenerID(expiredLID)
 	_, err = c.PollEvents()
 	assert.NoError(t, err)
-	assert.Equal(t, validLID, c.listenerID)
+	assert.Equal(t, validLID, c.ListenerID())
 
-	c.listenerID = validLID
+	c.SetListenerID(validLID)
 	_, err = c.PollEvents()
 	assert.NoError(t, err)
-	assert.Equal(t, validLID, c.listenerID)
+	assert.Equal(t, validLID, c.ListenerID())
 }
 
 func TestCheckStatusOk(t *testing.T) {
