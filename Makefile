@@ -1,4 +1,6 @@
-.PHONY: doc test
+.PHONY: all doc test integration-test coverage
+
+all: test integration-test coverage doc
 
 doc:
 	go get github.com/robertkrimen/godocdown/godocdown
