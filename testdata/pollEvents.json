@@ -1,0 +1,95 @@
+[
+  {
+    "timestamp": 1574106269793,
+    "setupOID": "77777777-5555-4444-8888-bbbbbbbbbbbb",
+    "execId": "88888888-3333-5555-2222-cccccccccccc",
+    "label": "Spot",
+    "metadata": "",
+    "type": 1,
+    "subType": 1,
+    "triggerId": "",
+    "actions": [
+      {
+        "deviceURL": "io://1111-0000-4444/11111111",
+        "commands": [
+          {
+            "name": "on"
+          }
+        ]
+      }
+    ],
+    "name": "ExecutionRegisteredEvent"
+  },
+  {
+    "timestamp": 1574106269793,
+    "setupOID": "77777777-5555-4444-8888-bbbbbbbbbbbb",
+    "execId": "88888888-3333-5555-2222-cccccccccccc",
+    "newState": "NOT_TRANSMITTED",
+    "ownerKey": "77777777-5555-4444-8888-bbbbbbbbbbbb",
+    "type": 1,
+    "subType": 1,
+    "oldState": "INITIALIZED",
+    "timeToNextState": 0,
+    "name": "ExecutionStateChangedEvent"
+  },
+  {
+    "timestamp": 1574106269793,
+    "gatewayId": "1111-0000-4444",
+    "name": "GatewaySynchronizationStartedEvent"
+  },
+  {
+    "timestamp": 1574106269795,
+    "setupOID": "77777777-5555-4444-8888-bbbbbbbbbbbb",
+    "execId": "88888888-3333-5555-2222-cccccccccccc",
+    "newState": "TRANSMITTED",
+    "ownerKey": "77777777-5555-4444-8888-bbbbbbbbbbbb",
+    "type": 1,
+    "subType": 1,
+    "oldState": "NOT_TRANSMITTED",
+    "timeToNextState": 0,
+    "name": "ExecutionStateChangedEvent"
+  },
+  {
+    "timestamp": 1574106269795,
+    "gatewayId": "1111-0000-4444",
+    "name": "GatewaySynchronizationEndedEvent"
+  },
+  {
+    "timestamp": 1574106270427,
+    "setupOID": "77777777-5555-4444-8888-bbbbbbbbbbbb",
+    "execId": "88888888-3333-5555-2222-cccccccccccc",
+    "newState": "IN_PROGRESS",
+    "ownerKey": "77777777-5555-4444-8888-bbbbbbbbbbbb",
+    "type": 1,
+    "subType": 1,
+    "oldState": "TRANSMITTED",
+    "timeToNextState": 0,
+    "name": "ExecutionStateChangedEvent"
+  },
+  {
+    "timestamp": 1574263419833,
+    "setupOID": "77777777-5555-4444-8888-bbbbbbbbbbbb",
+    "deviceURL": "io://1111-0000-4444/11111111",
+    "deviceStates": [
+      {
+        "name": "core:RSSILevelState",
+        "type": 2,
+        "value": "68.0"
+      }
+    ],
+    "name": "DeviceStateChangedEvent"
+  },
+  {
+    "timestamp": 1574263695956,
+    "gatewayId": "1111-0000-4444",
+    "protocolType": 22,
+    "name": "RefreshAllDevicesStatesCompletedEvent"
+  },
+  {
+    "timestamp": 1574263738818,
+    "setupOID": "77777777-5555-4444-8888-bbbbbbbbbbbb",
+    "userId": "user@domain.com",
+    "userAgentType": "tool",
+    "name": "EndUserLoginEvent"
+  }
+]

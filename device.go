@@ -13,7 +13,7 @@ type Device struct {
 	Shortcut         bool
 	ControllableName string
 	Definition       DeviceDefinition
-	States           []State
+	States           []DeviceState
 	Available        bool
 	Enabled          bool
 	PlaceOID         string

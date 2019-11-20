@@ -9,9 +9,9 @@
 
 Executable `kizcool/exe/kizcmd` is a command-line utility to control devices.
 
-Package `kizcool` provides a high-level client with structs and strong typing.
+Package `kizcool` provides a high-level client with structs for events and devices.
 
-Package `kizcool/client` provides a lower-level api client that returns the raw responses from the server without parsing.
+Package `kizcool/api` provides a lower-level api client that returns the raw responses from the server without parsing.
 
 ## Get kizcool command line tool
 

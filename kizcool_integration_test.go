@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/sgrimee/kizcool/client"
+	"github.com/sgrimee/kizcool/api"
 	"github.com/sgrimee/kizcool/config"
 	"github.com/stretchr/testify/assert"
 )
@@ -31,7 +31,7 @@ func TestIntBadLogin(t *testing.T) {
 	assert.NoError(t, err)
 	err = k.Login()
 	assert.Error(t, err)
-	_, ok := err.(*client.AuthenticationError)
+	_, ok := err.(*api.AuthenticationError)
 	assert.True(t, ok)
 }
 

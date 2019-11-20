@@ -1,4 +1,4 @@
-package client
+package api
 
 import (
 	"errors"
@@ -75,9 +75,9 @@ func TestRegisterListener(t *testing.T) {
 	defer server.Close()
 	c, err := NewWithHTTPClient("user", "pass", server.URL, "", server.Client())
 	assert.NoError(t, err)
-	l, err := c.RegisterListener()
-	assert.NoError(t, err)
-	assert.Equal(t, lid, l)
+	assert.Equal(t, "", c.listenerID)
+	assert.NoError(t, c.registerListener())
+	assert.Equal(t, lid, c.listenerID)
 }
 
 func TestUnregisterListener(t *testing.T) {
@@ -88,10 +88,86 @@ func TestUnregisterListener(t *testing.T) {
 	defer server.Close()
 	c, err := NewWithHTTPClient("user", "pass", server.URL, "", server.Client())
 	assert.NoError(t, err)
-	err = c.UnregisterListener(lid)
+	err = c.unregisterListener()
+	assert.NoError(t, err)
+	assert.Equal(t, "", c.listenerID)
+}
+
+func TestPollEventsWithIDGood(t *testing.T) {
+	const lid = "77777777-3333-5555-2222-cccccccccccc"
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, "/events/"+lid+"/fetch", req.URL.String())
+	}))
+	defer server.Close()
+	c, err := NewWithHTTPClient("user", "pass", server.URL, "", server.Client())
+	assert.NoError(t, err)
+	_, err = c.pollEventsWithID(lid)
 	assert.NoError(t, err)
 }
 
-func TestFetchEvents(t *testing.T) {
-	t.Skip("Implement me")
+func TestPollEventsWithIDEmpty(t *testing.T) {
+	c, err := New("user", "pass", "http://bla", "")
+	assert.NoError(t, err)
+	_, err = c.pollEventsWithID("")
+	assert.Error(t, err)
+	_, ok := err.(*NoRegisteredEventListenerError)
+	assert.True(t, ok)
+}
+
+func TestPollEventsWithIDBad(t *testing.T) {
+	const lid = "77777777-3333-5555-2222-cccccccccccc"
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, "/events/"+lid+"/fetch", req.URL.String())
+		rw.WriteHeader(400)
+		rw.Write([]byte(`{
+			"errorCode": "UNSPECIFIED_ERROR",
+			"error": "No registered event listener"
+		  }`))
+	}))
+	defer server.Close()
+	c, err := NewWithHTTPClient("user", "pass", server.URL, "", server.Client())
+	assert.NoError(t, err)
+	_, err = c.pollEventsWithID(lid)
+	assert.Error(t, err)
+	_, ok := err.(*NoRegisteredEventListenerError)
+	assert.True(t, ok)
+}
+
+func TestPollEventsDoesRegisterListener(t *testing.T) {
+	const validLID = "77777777-3333-5555-2222-cccccccccccc"
+	const expiredLID = "expired_lid"
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		switch query := req.URL.String(); query {
+		case "/events/register":
+			rw.Write([]byte(`{"id":"` + validLID + `"}`))
+		case "/events/" + validLID + "/fetch":
+			break
+		case "/events/" + expiredLID + "/fetch":
+			rw.WriteHeader(400)
+			rw.Write([]byte(`{
+				"errorCode": "UNSPECIFIED_ERROR",
+				"error": "No registered event listener"
+			}`))
+		default:
+			panic("Unexpected query")
+		}
+	}))
+	defer server.Close()
+	c, err := NewWithHTTPClient("gooduser", "goodpass", server.URL, "", server.Client())
+	assert.NoError(t, err)
+
+	c.listenerID = ""
+	_, err = c.PollEvents()
+	assert.NoError(t, err)
+	assert.Equal(t, validLID, c.listenerID)
+
+	c.listenerID = expiredLID
+	_, err = c.PollEvents()
+	assert.NoError(t, err)
+	assert.Equal(t, validLID, c.listenerID)
+
+	c.listenerID = validLID
+	_, err = c.PollEvents()
+	assert.NoError(t, err)
+	assert.Equal(t, validLID, c.listenerID)
 }

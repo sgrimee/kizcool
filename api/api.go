@@ -1,6 +1,6 @@
-// Package client provides a low-level client to the overkiz api
+// Package api provides a low-level client to the overkiz api
 // JSON responses are not unmarshalled and are returned as-is.
-package client
+package api
 
 import (
 	"bytes"
@@ -15,52 +15,25 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
-// ListenerID is used to track event listeners
-type ListenerID string
-
-// checkStatusOk performs simple tests to ensure the request was successful
-// if an error occured, try to qualify it then return it. In this case the Body of the
-// response will not be usable later on.
-func checkStatusOk(resp *http.Response) error {
-	if resp.StatusCode == 200 {
-		return nil
-	}
-	// Decode the body to try to get a meaningful error message
-	type errResult struct {
-		ErrorCode string `json:"errorCode"`
-		ErrorMsg  string `json:"error"`
-	}
-	var result errResult
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return fmt.Errorf("json decode: %v", err)
-	}
-	if resp.StatusCode == 401 {
-		if strings.Contains(result.ErrorMsg, "Too many requests") {
-			return NewTooManyRequestsError(result.ErrorMsg)
-		}
-		return NewAuthenticationError(result.ErrorMsg)
-	}
-	return fmt.Errorf("%v", result)
-}
-
 // Client provides methods to make http requests to the api server while making the
 // authentification and session ID renewal transparent.
 type Client struct {
-	username string
-	password string
-	baseURL  string
-	hc       *http.Client
+	username   string
+	password   string
+	baseURL    string
+	hc         *http.Client
+	listenerID string
 }
 
 // New returns a new Client
 // sessionID is optional and used when caching sessions externally
-func New(username, password, baseURL, sessionID string) (APIClient, error) {
+func New(username, password, baseURL, sessionID string) (*Client, error) {
 	hc := http.Client{}
 	return NewWithHTTPClient(username, password, baseURL, sessionID, &hc)
 }
 
 // NewWithHTTPClient returns a new Client, injecting the HTTP client to use. See New.
-func NewWithHTTPClient(username, password, baseURL, sessionID string, hc *http.Client) (APIClient, error) {
+func NewWithHTTPClient(username, password, baseURL, sessionID string, hc *http.Client) (*Client, error) {
 	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	if err != nil {
 		return nil, err
@@ -171,8 +144,7 @@ func (c *Client) GetDeviceState(deviceURL, stateName string) (*http.Response, er
 	return c.GetWithAuth(query)
 }
 
-// RefreshStates tells the server to refresh states.
-// But not sure yet what it really means`?
+// RefreshStates tells the server send the state of all devices as events
 func (c *Client) RefreshStates() error {
 	req, err := http.NewRequest(http.MethodPut, c.baseURL+"/enduserAPI/setup/devices/states/refresh", nil)
 	if err != nil {
@@ -183,6 +155,11 @@ func (c *Client) RefreshStates() error {
 		return err
 	}
 	return nil
+}
+
+// GetActionGroups returns the list of action groups defined on the box
+func (c *Client) GetActionGroups() (*http.Response, error) {
+	return c.GetWithAuth("/enduserAPI/actionGroups")
 }
 
 // Execute initiates the execution of a group of actions
@@ -200,15 +177,20 @@ func (c *Client) Execute(json []byte) (*http.Response, error) {
 	return resp, nil
 }
 
-// RegisterListener registers for events and returns a listener id
-func (c *Client) RegisterListener() (string, error) {
+// SetListenerID overrides the stored listenerID.
+func (c *Client) SetListenerID(listenerID string) {
+	c.listenerID = listenerID
+}
+
+// registerListener registers for events and stores the listener id
+func (c *Client) registerListener() error {
 	req, err := http.NewRequest(http.MethodPost, c.baseURL+"/events/register", nil)
 	if err != nil {
-		return "", err
+		return err
 	}
 	resp, err := c.DoWithAuth(req)
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer resp.Body.Close()
 	type Result struct {
@@ -216,14 +198,18 @@ func (c *Client) RegisterListener() (string, error) {
 	}
 	var result Result
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", err
+		return err
 	}
-	return result.ID, nil
+	c.SetListenerID(result.ID)
+	return nil
 }
 
-// UnregisterListener unregisters the listener
-func (c *Client) UnregisterListener(l string) error {
-	query := fmt.Sprintf("%s/events/%s/unregister", c.baseURL, l)
+// unregisterListener unregisters the listener
+func (c *Client) unregisterListener() error {
+	if c.listenerID == "" {
+		return nil
+	}
+	query := fmt.Sprintf("%s/events/%s/unregister", c.baseURL, c.listenerID)
 	req, err := http.NewRequest(http.MethodPost, query, nil)
 	if err != nil {
 		return err
@@ -233,5 +219,72 @@ func (c *Client) UnregisterListener(l string) error {
 		return err
 	}
 	resp.Body.Close()
+	c.listenerID = ""
 	return nil
+}
+
+// PollEvents checks for events on the given listener
+func (c *Client) pollEventsWithID(lid string) (*http.Response, error) {
+	if lid == "" {
+		return nil, NewNoRegisteredEventListenerError("listenerID cannot be empty")
+	}
+	query := fmt.Sprintf("%s/events/%s/fetch", c.baseURL, lid)
+	req, err := http.NewRequest(http.MethodPost, query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return c.DoWithAuth(req)
+}
+
+// PollEvents checks for events, using the saved listener and refreshing it if needed
+func (c *Client) PollEvents() (*http.Response, error) {
+	if c.listenerID == "" {
+		if err := c.registerListener(); err != nil {
+			return nil, err
+		}
+	}
+	resp, err := c.pollEventsWithID(c.listenerID)
+	if err != nil {
+		if _, ok := err.(*NoRegisteredEventListenerError); ok {
+			if err := c.registerListener(); err != nil {
+				return nil, err
+			}
+			if resp, err = c.pollEventsWithID(c.listenerID); err != nil {
+				return nil, err
+			}
+		}
+	}
+	return resp, nil
+}
+
+// checkStatusOk performs simple tests to ensure the request was successful
+// if an error occured, try to qualify it then return it. In this case the Body of the
+// response will not be usable later on.
+func checkStatusOk(resp *http.Response) error {
+	if resp.StatusCode == 200 {
+		return nil
+	}
+	// Decode the body to try to get a meaningful error message
+	type errResult struct {
+		ErrorCode string `json:"errorCode"`
+		ErrorMsg  string `json:"error"`
+	}
+	var result errResult
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return fmt.Errorf("json decode: %v", err)
+	}
+	switch resp.StatusCode {
+	case 401:
+		if strings.Contains(result.ErrorMsg, "Too many requests") {
+			return NewTooManyRequestsError(result.ErrorMsg)
+		}
+		return NewAuthenticationError(result.ErrorMsg)
+	case 400:
+		if strings.Contains(result.ErrorMsg, "No registered event listener") {
+			return NewNoRegisteredEventListenerError(result.ErrorMsg)
+		}
+		return errors.New(result.ErrorMsg)
+	default:
+		return fmt.Errorf("%v", result)
+	}
 }

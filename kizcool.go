@@ -6,26 +6,26 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/sgrimee/kizcool/client"
+	"github.com/sgrimee/kizcool/api"
 )
 
 // Kiz high-level client
 type Kiz struct {
-	clt client.APIClient
+	clt *api.Client
 }
 
 // New returns an initialized Kiz
 // sessionID is optional and used for external caching of sessions
 func New(username, password, baseURL, sessionID string) (*Kiz, error) {
-	clt, err := client.New(username, password, baseURL, sessionID)
+	clt, err := api.New(username, password, baseURL, sessionID)
 	if err != nil {
 		return nil, err
 	}
-	return NewWithClient(clt)
+	return NewWithAPIClient(clt)
 }
 
-// NewWithClient returns an initialized Kiz
-func NewWithClient(c client.APIClient) (*Kiz, error) {
+// NewWithAPIClient returns an initialized Kiz
+func NewWithAPIClient(c *api.Client) (*Kiz, error) {
 	k := Kiz{
 		clt: c,
 	}
@@ -110,26 +110,25 @@ func (k *Kiz) GetDeviceByText(text string) (Device, error) {
 }
 
 // GetDeviceState returns the current state with name stateName for the device with URL deviceURL
-func (k *Kiz) GetDeviceState(deviceURL DeviceURL, stateName StateName) (State, error) {
+func (k *Kiz) GetDeviceState(deviceURL DeviceURL, stateName StateName) (DeviceState, error) {
 	resp, err := k.clt.GetDeviceState(string(deviceURL), string(stateName))
 	if err != nil {
-		return State{}, err
+		return DeviceState{}, err
 	}
 	defer resp.Body.Close()
-	var result State
+	var result DeviceState
 	json.NewDecoder(resp.Body).Decode(&result)
 	return result, nil
 }
 
-// RefreshStates tells the server to refresh states.
-// But not sure yet what it really does...
+// RefreshStates tells the server send the state of all devices as events
 func (k *Kiz) RefreshStates() error {
 	return k.clt.RefreshStates()
 }
 
 // GetActionGroups returns the list of action groups defined on the box
 func (k *Kiz) GetActionGroups() ([]ActionGroup, error) {
-	resp, err := k.clt.GetWithAuth("/enduserAPI/actionGroups")
+	resp, err := k.clt.GetActionGroups()
 	if err != nil {
 		return nil, err
 	}
@@ -251,4 +250,17 @@ func (k *Kiz) SetClosure(device Device, position int) (ExecID, error) {
 		return "", err
 	}
 	return k.Execute(ag)
+}
+
+// PollEvents polls for events on the stored listener
+func (k *Kiz) PollEvents() (Events, error) {
+	resp, err := k.clt.PollEvents()
+	if err != nil {
+		return nil, err
+	}
+	var result Events
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return result, nil
 }

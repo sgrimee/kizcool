@@ -86,7 +86,7 @@ func printTextDevice(w io.Writer, d Device) (err error) {
 		"core:OnOffState":          true,
 		// "core:RSSILevelState":      true,
 	}
-	var states []State
+	var states []DeviceState
 	for _, state := range d.States {
 		if wantedStates[state.Name] {
 			states = append(states, state)

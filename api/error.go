@@ -1,4 +1,4 @@
-package client
+package api
 
 import "fmt"
 
@@ -37,5 +37,23 @@ func NewTooManyRequestsError(message string) *TooManyRequestsError {
 }
 
 func (e *TooManyRequestsError) Error() string {
+	return fmt.Sprintf("%d: %v", e.Code, e.Message)
+}
+
+// NoRegisteredEventListenerError happens when an event poll is done on an invalid event listener id
+type NoRegisteredEventListenerError struct {
+	Code    int
+	Message string
+}
+
+// NewNoRegisteredEventListenerError creates a new TooManyRequestsError
+func NewNoRegisteredEventListenerError(message string) *NoRegisteredEventListenerError {
+	return &NoRegisteredEventListenerError{
+		Code:    400,
+		Message: message,
+	}
+}
+
+func (e *NoRegisteredEventListenerError) Error() string {
 	return fmt.Sprintf("%d: %v", e.Code, e.Message)
 }

@@ -20,8 +20,8 @@ const (
 	StateString StateType = 3
 )
 
-// State encodes a device state
-type State struct {
+// DeviceState encodes a device state
+type DeviceState struct {
 	Name  StateName
 	Type  StateType
 	Value interface{}

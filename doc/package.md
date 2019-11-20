@@ -110,7 +110,7 @@ type Device struct {
 	Shortcut         bool
 	ControllableName string
 	Definition       DeviceDefinition
-	States           []State
+	States           []DeviceState
 	Available        bool
 	Enabled          bool
 	PlaceOID         string
@@ -147,6 +147,31 @@ type DeviceDefinition struct {
 
 DeviceDefinition describes the fields of a Device
 
+#### type DeviceState
+
+```go
+type DeviceState struct {
+	Name  StateName
+	Type  StateType
+	Value interface{}
+}
+```
+
+DeviceState encodes a device state
+
+#### type DeviceStateChangedEvent
+
+```go
+type DeviceStateChangedEvent struct {
+	GenericEvent
+	SetupOID     string        `json:"setupOID,omitempty"`
+	DeviceURL    DeviceURL     `json:"deviceURL,omitempty"`
+	DeviceStates []DeviceState `json:"deviceStates,omitempty"`
+}
+```
+
+DeviceStateChangedEvent indicates a change in the state of a device
+
 #### type DeviceURL
 
 ```go
@@ -156,6 +181,45 @@ type DeviceURL string
 DeviceURL is the full device URL including prefix e.g.
 io://1111-0000-4444/12345678
 
+#### type EndUserLoginEvent
+
+```go
+type EndUserLoginEvent struct {
+	GenericEvent
+	SetupOID      string `json:"setupOID,omitempty"`
+	UserID        string `json:"userId,omitempty"`
+	UserAgentType string `json:"userAgentType,omitempty"`
+}
+```
+
+EndUserLoginEvent happens when a user authenticates
+
+#### type Event
+
+```go
+type Event interface {
+	// contains filtered or unexported methods
+}
+```
+
+Event is an interface for any event
+
+#### type Events
+
+```go
+type Events []Event
+```
+
+Events is a slide of Event, used for unmarshalling several events of unknown
+type from json
+
+#### func (*Events) UnmarshalJSON
+
+```go
+func (events *Events) UnmarshalJSON(data []byte) error
+```
+UnmarshalJSON unmarshals an event from json, detecting the right event type
+
 #### type ExecID
 
 ```go
@@ -163,6 +227,94 @@ type ExecID string
 ```
 
 ExecID is the id of an execution (job)
+
+#### type ExecutionEvent
+
+```go
+type ExecutionEvent struct {
+	ExecID   ExecID `json:"execID,omitempty"`
+	SetupOID string `json:"setupOID,omitempty"`
+	SubType  int    `json:"subType,omitempty"`
+	Type     int    `json:"type,omitempty"`
+}
+```
+
+ExecutionEvent is the minimal set of fields shared by all Execution events
+
+#### type ExecutionRegisteredEvent
+
+```go
+type ExecutionRegisteredEvent struct {
+	GenericEvent
+	ExecutionEvent
+	Label     string   `json:"label,omitempty"`
+	Metadata  string   `json:"metadata,omitempty"`
+	TriggerID string   `json:"triggerId,omitempty"`
+	Actions   []Action `json:"actions,omitempty"`
+}
+```
+
+ExecutionRegisteredEvent indicates an execution has been registered
+
+#### type ExecutionStateChangedEvent
+
+```go
+type ExecutionStateChangedEvent struct {
+	GenericEvent
+	ExecutionEvent
+	NewState        string `json:"newState,omitempty"`
+	OldState        string `json:"oldState,omitempty"`
+	OwnerKey        string `json:"ownerKey,omitempty"`
+	TimeToNextState int    `json:"timeToNextState,omitempty"`
+}
+```
+
+ExecutionStateChangedEvent indicates a change in the state of an execution
+
+#### type GatewayEvent
+
+```go
+type GatewayEvent struct {
+	GatewayID string `json:"gatewayId,omitempty"`
+}
+```
+
+GatewayEvent indicates an event related to a gateway
+
+#### type GatewaySynchronizationEndedEvent
+
+```go
+type GatewaySynchronizationEndedEvent struct {
+	GenericEvent
+	GatewayEvent
+}
+```
+
+GatewaySynchronizationEndedEvent indicates the end of synchronization of a
+gateway
+
+#### type GatewaySynchronizationStartedEvent
+
+```go
+type GatewaySynchronizationStartedEvent struct {
+	GenericEvent
+	GatewayEvent
+}
+```
+
+GatewaySynchronizationStartedEvent indicates the start of synchronization of a
+gateway
+
+#### type GenericEvent
+
+```go
+type GenericEvent struct {
+	Timestamp int    `json:"timestamp,omitempty"`
+	Name      string `json:"name,omitempty"`
+}
+```
+
+GenericEvent is the minimal set of fields shared by all events
 
 #### type Kiz
 
@@ -181,12 +333,12 @@ func New(username, password, baseURL, sessionID string) (*Kiz, error)
 New returns an initialized Kiz sessionID is optional and used for external
 caching of sessions
 
-#### func  NewWithClient
+#### func  NewWithAPIClient
 
 ```go
-func NewWithClient(c client.APIClient) (*Kiz, error)
+func NewWithAPIClient(c *api.Client) (*Kiz, error)
 ```
-NewWithClient returns an initialized Kiz
+NewWithAPIClient returns an initialized Kiz
 
 #### func (*Kiz) Close
 
@@ -227,7 +379,7 @@ DeviceURL. If no match, it tries to match a device Label
 #### func (*Kiz) GetDeviceState
 
 ```go
-func (k *Kiz) GetDeviceState(deviceURL DeviceURL, stateName StateName) (State, error)
+func (k *Kiz) GetDeviceState(deviceURL DeviceURL, stateName StateName) (DeviceState, error)
 ```
 GetDeviceState returns the current state with name stateName for the device with
 URL deviceURL
@@ -267,13 +419,19 @@ func (k *Kiz) Open(device Device) (ExecID, error)
 ```
 Open opens a device
 
+#### func (*Kiz) PollEvents
+
+```go
+func (k *Kiz) PollEvents() (Events, error)
+```
+PollEvents polls for events on the stored listener
+
 #### func (*Kiz) RefreshStates
 
 ```go
 func (k *Kiz) RefreshStates() error
 ```
-RefreshStates tells the server to refresh states. But not sure yet what it
-really does...
+RefreshStates tells the server send the state of all devices as events
 
 #### func (*Kiz) SessionID
 
@@ -304,17 +462,18 @@ func (k *Kiz) Stop(device Device) (ExecID, error)
 ```
 Stop interrupts the current activity
 
-#### type State
+#### type RefreshAllDevicesStatesCompletedEvent
 
 ```go
-type State struct {
-	Name  StateName
-	Type  StateType
-	Value interface{}
+type RefreshAllDevicesStatesCompletedEvent struct {
+	GenericEvent
+	GatewayEvent
+	ProtocolType int `json:"protocolType,omitempty"`
 }
 ```
 
-State encodes a device state
+RefreshAllDevicesStatesCompletedEvent indicates the end of a request to get the
+state of all devices
 
 #### type StateDefinition
 
