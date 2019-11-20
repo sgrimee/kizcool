@@ -1,2 +1,3 @@
 *.code-workspace
 __debug_bin
+coverage.out
