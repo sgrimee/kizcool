@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/sgrimee/kizcool/api"
 	"github.com/stretchr/testify/assert"
@@ -21,44 +20,36 @@ func helperLoadBytes(t *testing.T, name string) []byte {
 	return bytes
 }
 
+func getTestKiz(t *testing.T, server *httptest.Server) *Kiz {
+	ac, err := api.NewWithHTTPClient("", "", server.URL, "", server.Client())
+	assert.NoError(t, err)
+	kiz, _ := NewWithAPIClient(ac)
+	return kiz
+}
+
 func TestNew(t *testing.T) {
-	_, err := New("gooduser", "goodpass", "", "")
+	_, err := New("", "", "http://bogus.org", "")
 	assert.NoError(t, err)
 }
 
-func TestBadLogin(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		assert.Equal(t, "/enduserAPI/login", req.URL.String())
-		rw.WriteHeader(401)
-		rw.Write([]byte(`{"errorCode": "AUTHENTICATION_ERROR","error": "Bad credentials"}`))
-	}))
-	defer server.Close()
-	ac, err := api.NewWithHTTPClient("baduser", "badpass", server.URL, "", server.Client())
-	assert.NoError(t, err)
-	kiz, _ := NewWithAPIClient(ac)
-	err = kiz.Login()
-	assert.Equal(t, err, api.NewAuthenticationError("Bad credentials"))
+func TestNewEmptyURL(t *testing.T) {
+	_, err := New("", "", "", "")
+	assert.Error(t, err)
 }
 
-func TestGoodLogin(t *testing.T) {
-	const sessionID = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		assert.Equal(t, "/enduserAPI/login", req.URL.String())
-		cookie := http.Cookie{
-			Name:    "JSESSIONID",
-			Value:   sessionID,
-			Expires: time.Now().AddDate(0, 0, 1),
-		}
-		http.SetCookie(rw, &cookie)
-		rw.Write([]byte(`{"success":true,"roles":[{"name":"ENDUSER"}]}`))
-	}))
-	defer server.Close()
-	ac, err := api.NewWithHTTPClient("gooduser", "goodpass", server.URL, "", server.Client())
-	assert.NoError(t, err)
-	kiz, _ := NewWithAPIClient(ac)
-	err = kiz.Login()
-	assert.Nil(t, err)
+func TestSessionID(t *testing.T) {
+	const sessionID = "test_session_id"
+	kiz, _ := New("", "", "http://bogus.org", sessionID)
 	assert.Equal(t, sessionID, kiz.SessionID())
+}
+
+func TestLogin(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	}))
+	defer server.Close()
+	kiz := getTestKiz(t, server)
+	err := kiz.Login()
+	assert.Error(t, err) // login will fail because we don't mock the cookie here
 }
 
 func TestGetDevices(t *testing.T) {
@@ -67,9 +58,7 @@ func TestGetDevices(t *testing.T) {
 		rw.Write(helperLoadBytes(t, "getDevices.json"))
 	}))
 	defer server.Close()
-	ac, err := api.NewWithHTTPClient("gooduser", "goodpass", server.URL, "", server.Client())
-	assert.NoError(t, err)
-	kiz, _ := NewWithAPIClient(ac)
+	kiz := getTestKiz(t, server)
 	devices, err := kiz.GetDevices()
 	assert.Nil(t, err)
 	assert.Equal(t, len(devices), 5)
@@ -81,9 +70,7 @@ func TestGetDevice(t *testing.T) {
 		rw.Write(helperLoadBytes(t, "getDevice.json"))
 	}))
 	defer server.Close()
-	ac, err := api.NewWithHTTPClient("gooduser", "goodpass", server.URL, "", server.Client())
-	assert.NoError(t, err)
-	kiz, _ := NewWithAPIClient(ac)
+	kiz := getTestKiz(t, server)
 	device, err := kiz.GetDevice("io://1111-0000-4444/11784413")
 	assert.Nil(t, err)
 	assert.Equal(t, len(device.States), 5)
@@ -120,9 +107,7 @@ func TestGetDeviceByTextMatchText(t *testing.T) {
 		rw.Write(helperLoadBytes(t, "getDevices.json"))
 	}))
 	defer server.Close()
-	ac, err := api.NewWithHTTPClient("gooduser", "goodpass", server.URL, "", server.Client())
-	assert.NoError(t, err)
-	kiz, _ := NewWithAPIClient(ac)
+	kiz := getTestKiz(t, server)
 	device, err := kiz.GetDeviceByText("fenetre1")
 	assert.Nil(t, err)
 	assert.Equal(t, device.Label, "Fenetre1")
@@ -134,9 +119,7 @@ func TestGetDeviceByTextURI(t *testing.T) {
 		rw.Write(helperLoadBytes(t, "getDevice.json"))
 	}))
 	defer server.Close()
-	ac, err := api.NewWithHTTPClient("gooduser", "goodpass", server.URL, "", server.Client())
-	assert.NoError(t, err)
-	kiz, _ := NewWithAPIClient(ac)
+	kiz := getTestKiz(t, server)
 	device, err := kiz.GetDeviceByText("io://1111-0000-4444/11784413")
 	assert.Nil(t, err)
 	assert.Equal(t, device.Label, "Fenetre1")
@@ -148,24 +131,17 @@ func TestGetDeviceState(t *testing.T) {
 		rw.Write([]byte(`{"name": "core:OnOffState","type": 3,"value": "off"}`))
 	}))
 	defer server.Close()
-	ac, err := api.NewWithHTTPClient("gooduser", "goodpass", server.URL, "", server.Client())
-	assert.NoError(t, err)
-	kiz, _ := NewWithAPIClient(ac)
+	kiz := getTestKiz(t, server)
 	state, err := kiz.GetDeviceState("io://1111-0000-4444/12345678", "core:OnOffState")
 	assert.Nil(t, err)
 	assert.Equal(t, "off", state.Value)
 }
 
 func TestRefreshStates(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		assert.Equal(t, "/enduserAPI/setup/devices/states/refresh", req.URL.String())
-	}))
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {}))
 	defer server.Close()
-	ac, err := api.NewWithHTTPClient("gooduser", "goodpass", server.URL, "", server.Client())
-	assert.NoError(t, err)
-	kiz, _ := NewWithAPIClient(ac)
-	err = kiz.RefreshStates()
-	assert.Nil(t, err)
+	kiz := getTestKiz(t, server)
+	assert.NoError(t, kiz.RefreshStates())
 }
 
 func TestActionGroupWithOneCommandUnsupported(t *testing.T) {
@@ -187,9 +163,7 @@ func TestGetActionGroups(t *testing.T) {
 		rw.Write(helperLoadBytes(t, "getActionGroups.json"))
 	}))
 	defer server.Close()
-	ac, err := api.NewWithHTTPClient("gooduser", "goodpass", server.URL, "", server.Client())
-	assert.NoError(t, err)
-	kiz, _ := NewWithAPIClient(ac)
+	kiz := getTestKiz(t, server)
 	actionGroups, err := kiz.GetActionGroups()
 	assert.Nil(t, err)
 	assert.Equal(t, len(actionGroups), 1)
@@ -219,9 +193,7 @@ func TestExecute(t *testing.T) {
 		rw.Write([]byte(`{"execId": "133a5c55-3655-5455-2355-c33e43535e55"}`))
 	}))
 	defer server.Close()
-	ac, err := api.NewWithHTTPClient("gooduser", "goodpass", server.URL, "", server.Client())
-	assert.NoError(t, err)
-	kiz, _ := NewWithAPIClient(ac)
+	kiz := getTestKiz(t, server)
 	device := Device{
 		DeviceURL: "io://1111-0000-4444/12345678",
 		Definition: DeviceDefinition{

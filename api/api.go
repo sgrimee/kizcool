@@ -34,6 +34,9 @@ func New(username, password, baseURL, sessionID string) (*Client, error) {
 
 // NewWithHTTPClient returns a new Client, injecting the HTTP client to use. See New.
 func NewWithHTTPClient(username, password, baseURL, sessionID string, hc *http.Client) (*Client, error) {
+	if baseURL == "" {
+		return nil, errors.New("baseURL cannot be empty")
+	}
 	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	if err != nil {
 		return nil, err
@@ -73,6 +76,7 @@ func (c *Client) SessionID() string {
 }
 
 // Login to the api server to obtain a session ID cookie
+// This is normally called automatically from the methods that need it
 func (c *Client) Login() error {
 	formData := url.Values{"userId": {c.username}, "userPassword": {c.password}}
 	resp, err := c.hc.PostForm(c.baseURL+"/enduserAPI/login", formData)

@@ -338,7 +338,7 @@ caching of sessions
 ```go
 func NewWithAPIClient(c *api.Client) (*Kiz, error)
 ```
-NewWithAPIClient returns an initialized Kiz
+NewWithAPIClient returns an initialized Kiz from an existing API client
 
 #### func (*Kiz) Close
 
@@ -396,7 +396,8 @@ GetDevices returns the list of devices
 ```go
 func (k *Kiz) Login() error
 ```
-Login to the server
+Login to the api server to obtain a session ID cookie This is normally called
+automatically from the methods that need it
 
 #### func (*Kiz) Off
 

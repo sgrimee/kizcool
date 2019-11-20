@@ -24,7 +24,7 @@ func New(username, password, baseURL, sessionID string) (*Kiz, error) {
 	return NewWithAPIClient(clt)
 }
 
-// NewWithAPIClient returns an initialized Kiz
+// NewWithAPIClient returns an initialized Kiz from an existing API client
 func NewWithAPIClient(c *api.Client) (*Kiz, error) {
 	k := Kiz{
 		clt: c,
@@ -38,7 +38,8 @@ func (k *Kiz) SessionID() string {
 	return k.clt.SessionID()
 }
 
-// Login to the server
+// Login to the api server to obtain a session ID cookie
+// This is normally called automatically from the methods that need it
 func (k *Kiz) Login() error {
 	return k.clt.Login()
 }
