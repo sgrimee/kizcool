@@ -216,7 +216,6 @@ func TestExecute(t *testing.T) {
 		err := json.NewDecoder(req.Body).Decode(&ag)
 		assert.Nil(t, err)
 		assert.Equal(t, DeviceURL("io://1111-0000-4444/12345678"), ag.Actions[0].DeviceURL)
-		assert.Equal(t, "on", ag.Actions[0].Commands[0].Name)
 		rw.Write([]byte(`{"execId": "133a5c55-3655-5455-2355-c33e43535e55"}`))
 	}))
 	defer server.Close()
@@ -227,9 +226,13 @@ func TestExecute(t *testing.T) {
 		DeviceURL: "io://1111-0000-4444/12345678",
 		Definition: DeviceDefinition{
 			Commands: []CommandDefinition{
-				{
-					CommandName: CmdOn,
-				},
+				{CommandName: CmdOn},
+				{CommandName: CmdOff},
+				{CommandName: CmdOpen},
+				{CommandName: CmdClose},
+				{CommandName: CmdStop},
+				{CommandName: CmdSetIntensity},
+				{CommandName: CmdSetClosure},
 			},
 		},
 	}
@@ -238,34 +241,28 @@ func TestExecute(t *testing.T) {
 	id, err := kiz.Execute(actionGroup)
 	assert.NoError(t, err)
 	assert.Equal(t, 36, len(string(id)))
-}
 
-func TestOn(t *testing.T) {
-	t.Skip("Write me")
-}
+	// also test the shortcuts
+	_, err = kiz.On(device)
+	assert.NoError(t, err)
 
-func TestOff(t *testing.T) {
-	t.Skip("Write me")
-}
+	_, err = kiz.Off(device)
+	assert.NoError(t, err)
 
-func TestOpen(t *testing.T) {
-	t.Skip("Write me")
-}
+	_, err = kiz.Open(device)
+	assert.NoError(t, err)
 
-func TestClose(t *testing.T) {
-	t.Skip("Write me")
-}
+	_, err = kiz.Close(device)
+	assert.NoError(t, err)
 
-func TestStop(t *testing.T) {
-	t.Skip("Write me")
-}
+	_, err = kiz.Stop(device)
+	assert.NoError(t, err)
 
-func TestSetIntensity(t *testing.T) {
-	t.Skip("Write me")
-}
+	_, err = kiz.SetIntensity(device, 0)
+	assert.NoError(t, err)
 
-func TestSetClosure(t *testing.T) {
-	t.Skip("Write me")
+	_, err = kiz.SetClosure(device, 0)
+	assert.NoError(t, err)
 }
 
 func TestPollEventsAllKnownEventTypes(t *testing.T) {
