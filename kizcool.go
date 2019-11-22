@@ -2,10 +2,12 @@ package kizcool
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
+	"github.com/pkg/errors"
 	"github.com/sgrimee/kizcool/api"
 )
 
@@ -255,13 +257,53 @@ func (k *Kiz) SetClosure(device Device, position int) (ExecID, error) {
 
 // PollEvents polls for events on the stored listener
 func (k *Kiz) PollEvents() (Events, error) {
+	fmt.Println("Polling for events")
 	resp, err := k.clt.PollEvents()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error getting events: %v", err)
 	}
 	var result Events
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error decoding events from json: %v", err)
 	}
 	return result, nil
+}
+
+// PollEventsContinuous calls PollEventsContinuousWithSleepTime with a reasonable polling interval
+func (k *Kiz) PollEventsContinuous(ev chan<- Event, e chan<- error, finish <-chan struct{}) {
+	const sleepTimeDefault = 30 * time.Second
+	k.PollEventsContinuousWithSleepTime(ev, e, finish, sleepTimeDefault)
+}
+
+// PollEventsContinuousWithSleepTime polls for events at given intervals and sends received events and errors on given channels.
+// In case of error, polling will resume after a moment.
+// Close the finish channel to indicate that this method should stop polling and return.
+// It can be used in a goroutine.
+func (k *Kiz) PollEventsContinuousWithSleepTime(ev chan<- Event, e chan<- error, finish <-chan struct{}, sleepTime time.Duration) {
+	const refreshStatesEvery = 30 * time.Minute
+	const delayBeforeResumingPolling = 40 * time.Second
+	refreshTicker := time.NewTicker(refreshStatesEvery)
+	for {
+		events, err := k.PollEvents()
+		if err != nil {
+			e <- err
+			time.Sleep(delayBeforeResumingPolling)
+		}
+		for _, e := range events {
+			fmt.Printf("Ev: %v", e)
+			ev <- e
+		}
+		select {
+		case <-refreshTicker.C:
+			err := k.RefreshStates()
+			if err != nil {
+				e <- err
+			}
+		case <-finish:
+			refreshTicker.Stop()
+			return
+		default:
+			time.Sleep(sleepTime)
+		}
+	}
 }

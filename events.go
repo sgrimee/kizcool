@@ -6,7 +6,7 @@ import "fmt"
 
 // Event is an interface for any event
 type Event interface {
-	event()
+	Kind() string
 }
 
 // GenericEvent is the minimal set of fields shared by all events
@@ -15,8 +15,10 @@ type GenericEvent struct {
 	Name      string `json:"name,omitempty"`
 }
 
-// event does nothing, just implements the interface
-func (e *GenericEvent) event() { return }
+// Kind returns a partial text description of the event
+func (e *GenericEvent) Kind() string {
+	return fmt.Sprintf("%v", e)
+}
 
 // ExecutionEvent is the minimal set of fields shared by all Execution events
 type ExecutionEvent struct {

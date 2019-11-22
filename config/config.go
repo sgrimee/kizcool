@@ -53,7 +53,7 @@ func SetSessionID(ID string) {
 	viper.Set("session_id", ID)
 }
 
-// Read reads in config file and returns a Config struct
+// Read reads in config file. It should be called before using other functions in this package.
 // The local directory is searched first, then the user's home directory
 // If no file is found and create is true, a config file with defaults is created.
 func Read(create bool) error {

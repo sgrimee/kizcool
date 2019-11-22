@@ -5,15 +5,17 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
 	"sync"
+	"time"
 
 	"golang.org/x/net/publicsuffix"
+
+	"github.com/pkg/errors"
 )
 
 // Client provides methods to make http requests to the api server while making the
@@ -31,7 +33,9 @@ type Client struct {
 // New returns a new Client
 // sessionID is optional and used when caching sessions externally
 func New(username, password, baseURL, sessionID string) (*Client, error) {
-	hc := http.Client{}
+	hc := http.Client{
+		Timeout: time.Second * 10,
+	}
 	return NewWithHTTPClient(username, password, baseURL, sessionID, &hc)
 }
 
@@ -111,6 +115,7 @@ func (c *Client) GetWithAuth(query string) (*http.Response, error) {
 // DoWithAuth performs the given request. If an authentication error occurs,
 // it tries to login to renew the sessionID, then tries the request again.
 func (c *Client) DoWithAuth(req *http.Request) (*http.Response, error) {
+	req.Header.Set("User-Agent", "overkiz/1.0")
 	resp, err := c.hc.Do(req)
 	if err != nil {
 		return nil, err
@@ -200,13 +205,13 @@ func (c *Client) ListenerID() string {
 
 // registerListener registers for events and stores the listener id
 func (c *Client) registerListener() error {
-	req, err := http.NewRequest(http.MethodPost, c.baseURL+"/events/register", nil)
+	req, err := http.NewRequest(http.MethodPost, c.baseURL+"/enduserAPI/events/register", nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error building request: %s", err)
 	}
 	resp, err := c.DoWithAuth(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("DoWithAuth error: %s", err)
 	}
 	defer resp.Body.Close()
 	type Result struct {
@@ -214,7 +219,7 @@ func (c *Client) registerListener() error {
 	}
 	var result Result
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return err
+		return fmt.Errorf("Error parsing listenerID from json: %s", err)
 	}
 	c.SetListenerID(result.ID)
 	return nil
@@ -225,7 +230,7 @@ func (c *Client) unregisterListener() error {
 	if c.ListenerID() == "" {
 		return nil
 	}
-	query := fmt.Sprintf("%s/events/%s/unregister", c.baseURL, c.ListenerID())
+	query := fmt.Sprintf("%s/enduserAPI/events/%s/unregister", c.baseURL, c.ListenerID())
 	req, err := http.NewRequest(http.MethodPost, query, nil)
 	if err != nil {
 		return err
@@ -244,7 +249,7 @@ func (c *Client) pollEventsWithID(lid string) (*http.Response, error) {
 	if lid == "" {
 		return nil, NewNoRegisteredEventListenerError("listenerID cannot be empty")
 	}
-	query := fmt.Sprintf("%s/events/%s/fetch", c.baseURL, lid)
+	query := fmt.Sprintf("%s/enduserAPI/events/%s/fetch", c.baseURL, lid)
 	req, err := http.NewRequest(http.MethodPost, query, nil)
 	if err != nil {
 		return nil, err
@@ -256,19 +261,20 @@ func (c *Client) pollEventsWithID(lid string) (*http.Response, error) {
 func (c *Client) PollEvents() (*http.Response, error) {
 	if c.ListenerID() == "" {
 		if err := c.registerListener(); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Error registering first listener: %v", err)
 		}
 	}
 	resp, err := c.pollEventsWithID(c.ListenerID())
 	if err != nil {
 		if _, ok := err.(*NoRegisteredEventListenerError); ok {
 			if err := c.registerListener(); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("Error refreshing listener: %v", err)
 			}
 			if resp, err = c.pollEventsWithID(c.ListenerID()); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("Error retrieving events with valid listener: %v", err)
 			}
 		}
+		return nil, err
 	}
 	return resp, nil
 }

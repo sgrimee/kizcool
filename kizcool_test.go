@@ -2,11 +2,13 @@ package kizcool
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/sgrimee/kizcool/api"
 	"github.com/stretchr/testify/assert"
@@ -23,6 +25,7 @@ func helperLoadBytes(t *testing.T, name string) []byte {
 func getTestKiz(t *testing.T, server *httptest.Server) *Kiz {
 	ac, err := api.NewWithHTTPClient("", "", server.URL, "", server.Client())
 	assert.NoError(t, err)
+	ac.SetListenerID("not_empty")
 	kiz, _ := NewWithAPIClient(ac)
 	return kiz
 }
@@ -256,11 +259,40 @@ func TestPollEventsNoEvent(t *testing.T) {
 		rw.Write([]byte(`[]`))
 	}))
 	defer server.Close()
-	ac, err := api.NewWithHTTPClient("gooduser", "goodpass", server.URL, "", server.Client())
-	assert.NoError(t, err)
-	ac.SetListenerID("not_empty")
-	kiz, _ := NewWithAPIClient(ac)
+	kiz := getTestKiz(t, server)
 	events, err := kiz.PollEvents()
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(events))
+}
+
+func TestPollEventsContinuous(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.Write(helperLoadBytes(t, "pollEvents.json"))
+	}))
+	defer server.Close()
+	kiz := getTestKiz(t, server)
+
+	events := make(chan Event)
+	finish := make(chan struct{})
+	e := make(chan error)
+
+	go kiz.PollEventsContinuousWithSleepTime(events, e, finish, 1*time.Millisecond)
+
+	var ev []Event
+	for {
+		select {
+		case err := <-e:
+			t.Log(fmt.Sprintf("%+v", err))
+			t.FailNow()
+		case event := <-events:
+			ev = append(ev, event)
+			t.Logf("Event: %s", event.Kind())
+		default:
+		}
+		if len(ev) >= 15 {
+			t.Log("Stop")
+			close(finish)
+			return
+		}
+	}
 }

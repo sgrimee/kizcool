@@ -23,6 +23,15 @@
             "args": ["configure"]
         },
         {
+            "name": "Launch listen",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}",
+            "env": {},
+            "args": ["listen"]
+        },
+        {
             "name": "Launch test function",
             "type": "go",
             "request": "launch",
