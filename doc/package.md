@@ -198,7 +198,7 @@ EndUserLoginEvent happens when a user authenticates
 
 ```go
 type Event interface {
-	// contains filtered or unexported methods
+	Kind() string
 }
 ```
 
@@ -316,6 +316,13 @@ type GenericEvent struct {
 
 GenericEvent is the minimal set of fields shared by all events
 
+#### func (*GenericEvent) Kind
+
+```go
+func (e *GenericEvent) Kind() string
+```
+Kind returns a partial text description of the event
+
 #### type Kiz
 
 ```go
@@ -426,6 +433,24 @@ Open opens a device
 func (k *Kiz) PollEvents() (Events, error)
 ```
 PollEvents polls for events on the stored listener
+
+#### func (*Kiz) PollEventsContinuous
+
+```go
+func (k *Kiz) PollEventsContinuous(ev chan<- Event, e chan<- error, finish <-chan struct{})
+```
+PollEventsContinuous calls PollEventsContinuousWithSleepTime with a reasonable
+polling interval
+
+#### func (*Kiz) PollEventsContinuousWithSleepTime
+
+```go
+func (k *Kiz) PollEventsContinuousWithSleepTime(ev chan<- Event, e chan<- error, finish <-chan struct{}, sleepTime time.Duration)
+```
+PollEventsContinuousWithSleepTime polls for events at given intervals and sends
+received events and errors on given channels. In case of error, polling will
+resume after a moment. Close the finish channel to indicate that this method
+should stop polling and return. It can be used in a goroutine.
 
 #### func (*Kiz) RefreshStates
 

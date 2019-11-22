@@ -86,7 +86,7 @@ func TestRefreshStates(t *testing.T) {
 func TestRegisterListener(t *testing.T) {
 	const lid = "77777777-3333-5555-2222-cccccccccccc"
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		assert.Equal(t, "/events/register", req.URL.String())
+		assert.Equal(t, "/enduserAPI/events/register", req.URL.String())
 		rw.Write([]byte(`{"id":"` + lid + `"}`))
 	}))
 	defer server.Close()
@@ -100,7 +100,7 @@ func TestRegisterListener(t *testing.T) {
 func TestUnregisterListener(t *testing.T) {
 	const lid = "77777777-3333-5555-2222-cccccccccccc"
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		assert.Equal(t, "/events/"+lid+"/unregister", req.URL.String())
+		assert.Equal(t, "/enduserAPI/events/"+lid+"/unregister", req.URL.String())
 	}))
 	defer server.Close()
 	c, err := NewWithHTTPClient("user", "pass", server.URL, "", server.Client())
@@ -113,7 +113,7 @@ func TestUnregisterListener(t *testing.T) {
 func TestPollEventsWithIDGood(t *testing.T) {
 	const lid = "77777777-3333-5555-2222-cccccccccccc"
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		assert.Equal(t, "/events/"+lid+"/fetch", req.URL.String())
+		assert.Equal(t, "/enduserAPI/events/"+lid+"/fetch", req.URL.String())
 	}))
 	defer server.Close()
 	c, err := NewWithHTTPClient("user", "pass", server.URL, "", server.Client())
@@ -134,7 +134,7 @@ func TestPollEventsWithIDEmpty(t *testing.T) {
 func TestPollEventsWithIDBad(t *testing.T) {
 	const lid = "77777777-3333-5555-2222-cccccccccccc"
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		assert.Equal(t, "/events/"+lid+"/fetch", req.URL.String())
+		assert.Equal(t, "/enduserAPI/events/"+lid+"/fetch", req.URL.String())
 		rw.WriteHeader(400)
 		rw.Write([]byte(`{
 			"errorCode": "UNSPECIFIED_ERROR",
@@ -155,11 +155,11 @@ func TestPollEventsDoesRegisterListener(t *testing.T) {
 	const expiredLID = "expired_lid"
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		switch query := req.URL.String(); query {
-		case "/events/register":
+		case "/enduserAPI/events/register":
 			rw.Write([]byte(`{"id":"` + validLID + `"}`))
-		case "/events/" + validLID + "/fetch":
+		case "/enduserAPI/events/" + validLID + "/fetch":
 			break
-		case "/events/" + expiredLID + "/fetch":
+		case "/enduserAPI/events/" + expiredLID + "/fetch":
 			rw.WriteHeader(400)
 			rw.Write([]byte(`{
 				"errorCode": "UNSPECIFIED_ERROR",
