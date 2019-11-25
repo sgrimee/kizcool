@@ -271,6 +271,28 @@ type ExecutionStateChangedEvent struct {
 
 ExecutionStateChangedEvent indicates a change in the state of an execution
 
+#### type GatewayAliveEvent
+
+```go
+type GatewayAliveEvent struct {
+	GenericEvent
+	GatewayEvent
+}
+```
+
+GatewayAliveEvent indicates the gateway is accessible again
+
+#### type GatewayDownEvent
+
+```go
+type GatewayDownEvent struct {
+	GenericEvent
+	GatewayEvent
+}
+```
+
+GatewayDownEvent indicates the gateway has become unreachable
+
 #### type GatewayEvent
 
 ```go

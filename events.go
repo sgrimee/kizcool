@@ -65,11 +65,13 @@ type GatewaySynchronizationEndedEvent struct {
 	GatewayEvent
 }
 
+// GatewayDownEvent indicates the gateway has become unreachable
 type GatewayDownEvent struct {
 	GenericEvent
 	GatewayEvent
 }
 
+// GatewayAliveEvent indicates the gateway is accessible again
 type GatewayAliveEvent struct {
 	GenericEvent
 	GatewayEvent

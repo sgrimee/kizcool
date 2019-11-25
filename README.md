@@ -17,7 +17,7 @@ Package `kizcool/api` provides a lower-level api client that returns the raw res
 
 ```
 go get github.com/sgrimee/kizcool
-cd $GOPATH/src/github.com/sgrimee/kizcool/exe/kizcmd
+cd $GOPATH/src/github.com/sgrimee/kizcool/cmd/kizcmd
 go get
 go install
 kizcmd configure
