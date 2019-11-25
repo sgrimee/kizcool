@@ -26,7 +26,7 @@ var listenCmd = &cobra.Command{
 				fmt.Printf("ERROR: %+v\n", err)
 				log.Println("Polling will resume after a while.")
 			case event := <-events:
-				fmt.Printf("Event: %+v\n", event)
+				fmt.Printf("Event: %T - %+v\n", event, event)
 			default:
 				time.Sleep(time.Millisecond * 100) // avoid burning the CPU
 			}

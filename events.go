@@ -65,6 +65,16 @@ type GatewaySynchronizationEndedEvent struct {
 	GatewayEvent
 }
 
+type GatewayDownEvent struct {
+	GenericEvent
+	GatewayEvent
+}
+
+type GatewayAliveEvent struct {
+	GenericEvent
+	GatewayEvent
+}
+
 // RefreshAllDevicesStatesCompletedEvent indicates the end of a request to get the state of all devices
 type RefreshAllDevicesStatesCompletedEvent struct {
 	GenericEvent
@@ -123,6 +133,10 @@ func (events *Events) UnmarshalJSON(data []byte) error {
 			actual = &GatewaySynchronizationStartedEvent{}
 		case "GatewaySynchronizationEndedEvent":
 			actual = &GatewaySynchronizationEndedEvent{}
+		case "GatewayDownEvent":
+			actual = &GatewayDownEvent{}
+		case "GatewayAliveEvent":
+			actual = &GatewayAliveEvent{}
 		case "RefreshAllDevicesStatesCompletedEvent":
 			actual = &RefreshAllDevicesStatesCompletedEvent{}
 		case "DeviceStateChangedEvent":

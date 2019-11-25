@@ -257,7 +257,6 @@ func (k *Kiz) SetClosure(device Device, position int) (ExecID, error) {
 
 // PollEvents polls for events on the stored listener
 func (k *Kiz) PollEvents() (Events, error) {
-	fmt.Println("Polling for events")
 	resp, err := k.clt.PollEvents()
 	if err != nil {
 		return nil, fmt.Errorf("Error getting events: %v", err)
@@ -290,7 +289,6 @@ func (k *Kiz) PollEventsContinuousWithSleepTime(ev chan<- Event, e chan<- error,
 			time.Sleep(delayBeforeResumingPolling)
 		}
 		for _, e := range events {
-			fmt.Printf("Ev: %v", e)
 			ev <- e
 		}
 		select {
