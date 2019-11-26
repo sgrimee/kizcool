@@ -57,3 +57,16 @@ func NewNoRegisteredEventListenerError(message string) *NoRegisteredEventListene
 func (e *NoRegisteredEventListenerError) Error() string {
 	return fmt.Sprintf("%d: %v", e.Code, e.Message)
 }
+
+// JSONError happens when unmarshalling json fails
+type JSONError struct {
+	Data []byte
+	Err  error
+}
+
+// Unwrap returns the wrapped error
+func (e *JSONError) Unwrap() error { return e.Err }
+
+func (e *JSONError) Error() string {
+	return fmt.Sprintf("%v", e.Err)
+}

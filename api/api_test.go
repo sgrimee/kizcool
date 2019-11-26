@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -203,14 +204,14 @@ func TestCheckStatusOk(t *testing.T) {
 			NewTooManyRequestsError("Too many requests, try again later : login with user@domain.com")},
 		{"500", 500, `{"errorCode":"WEIRD_ERROR","error":"Unexpected"}`, errors.New("{WEIRD_ERROR Unexpected}")},
 
-		{"bad-json", 999, "Not json", errors.New("json decode: invalid character 'N' looking for beginning of value")},
+		{"bad-json", 999, "Not json", &JSONError{Data: []byte(`Not json`), Err: &json.SyntaxError{}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
 			w.Write([]byte(tt.bodyText))
 			w.Code = tt.code
-			assert.Equal(t, tt.e, checkStatusOk(w.Result()))
+			assert.IsType(t, tt.e, checkStatusOk(w.Result()))
 		})
 	}
 }

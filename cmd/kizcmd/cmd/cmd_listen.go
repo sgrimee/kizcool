@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"time"
 
 	"github.com/sgrimee/kizcool"
@@ -23,10 +23,14 @@ var listenCmd = &cobra.Command{
 		for {
 			select {
 			case err := <-e:
-				fmt.Printf("ERROR: %+v\n", err)
-				log.Println("Polling will resume after a while.")
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("Polling error, will resume after a pause.")
 			case event := <-events:
-				fmt.Printf("Event: %T - %+v\n", event, event)
+				log.WithFields(log.Fields{
+					"event": event,
+					"type":  fmt.Sprintf("%T", event),
+				}).Info("Received event")
 			default:
 				time.Sleep(time.Millisecond * 100) // avoid burning the CPU
 			}

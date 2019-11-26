@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 	"strconv"
 
 	"github.com/spf13/cobra"

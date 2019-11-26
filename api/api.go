@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -88,7 +89,7 @@ func (c *Client) Login() error {
 	formData := url.Values{"userId": {c.username}, "userPassword": {c.password}}
 	resp, err := c.hc.PostForm(c.baseURL+"/enduserAPI/login", formData)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error logging in: %w", err)
 	}
 	defer resp.Body.Close()
 	if err := checkStatusOk(resp); err != nil {
@@ -164,7 +165,7 @@ func (c *Client) RefreshStates() error {
 	}
 	_, err = c.DoWithAuth(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error refreshing states: %w", err)
 	}
 	return nil
 }
@@ -184,7 +185,7 @@ func (c *Client) Execute(json []byte) (*http.Response, error) {
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := c.DoWithAuth(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error executing json. %w", err)
 	}
 	return resp, nil
 }
@@ -207,11 +208,11 @@ func (c *Client) ListenerID() string {
 func (c *Client) registerListener() error {
 	req, err := http.NewRequest(http.MethodPost, c.baseURL+"/enduserAPI/events/register", nil)
 	if err != nil {
-		return fmt.Errorf("Error building request: %s", err)
+		return err
 	}
 	resp, err := c.DoWithAuth(req)
 	if err != nil {
-		return fmt.Errorf("DoWithAuth error: %s", err)
+		return fmt.Errorf("DoWithAuth error in registerListener: %w", err)
 	}
 	defer resp.Body.Close()
 	type Result struct {
@@ -219,7 +220,7 @@ func (c *Client) registerListener() error {
 	}
 	var result Result
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return fmt.Errorf("Error parsing listenerID from json: %s", err)
+		return fmt.Errorf("Error parsing listenerID from json: %w", err)
 	}
 	c.SetListenerID(result.ID)
 	return nil
@@ -237,7 +238,7 @@ func (c *Client) unregisterListener() error {
 	}
 	resp, err := c.DoWithAuth(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("unregisterListener error from DoWithAuth: %w", err)
 	}
 	resp.Body.Close()
 	c.SetListenerID("")
@@ -252,7 +253,7 @@ func (c *Client) pollEventsWithID(lid string) (*http.Response, error) {
 	query := fmt.Sprintf("%s/enduserAPI/events/%s/fetch", c.baseURL, lid)
 	req, err := http.NewRequest(http.MethodPost, query, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("pollEventsWithID error getching events: %w", err)
 	}
 	return c.DoWithAuth(req)
 }
@@ -261,17 +262,17 @@ func (c *Client) pollEventsWithID(lid string) (*http.Response, error) {
 func (c *Client) PollEvents() (*http.Response, error) {
 	if c.ListenerID() == "" {
 		if err := c.registerListener(); err != nil {
-			return nil, fmt.Errorf("Error registering first listener: %v", err)
+			return nil, fmt.Errorf("Error registering first listener: %w", err)
 		}
 	}
 	resp, err := c.pollEventsWithID(c.ListenerID())
 	if err != nil {
 		if _, ok := err.(*NoRegisteredEventListenerError); ok {
 			if err := c.registerListener(); err != nil {
-				return nil, fmt.Errorf("Error refreshing listener: %v", err)
+				return nil, fmt.Errorf("Error refreshing listener: %w", err)
 			}
 			if resp, err = c.pollEventsWithID(c.ListenerID()); err != nil {
-				return nil, fmt.Errorf("Error retrieving events with valid listener: %v", err)
+				return nil, fmt.Errorf("Error retrieving events with valid listener: %w", err)
 			}
 		}
 		return nil, err
@@ -281,19 +282,28 @@ func (c *Client) PollEvents() (*http.Response, error) {
 
 // checkStatusOk performs simple tests to ensure the request was successful
 // if an error occured, try to qualify it then return it. In this case the Body of the
-// response will not be usable later on.
+// response is closed.
 func checkStatusOk(resp *http.Response) error {
 	if resp.StatusCode == 200 {
 		return nil
 	}
+	defer resp.Body.Close()
 	// Decode the body to try to get a meaningful error message
 	type errResult struct {
 		ErrorCode string `json:"errorCode"`
 		ErrorMsg  string `json:"error"`
 	}
 	var result errResult
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return fmt.Errorf("json decode: %v", err)
+	var bodyBytes []byte
+	if resp.Body == nil {
+		return errors.New("checkStatusOk got empty Body")
+	}
+	bodyBytes, _ = ioutil.ReadAll(resp.Body)
+	if err := json.Unmarshal(bodyBytes, &result); err != nil {
+		return &JSONError{
+			Data: bodyBytes,
+			Err:  err,
+		}
 	}
 	switch resp.StatusCode {
 	case 401:

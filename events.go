@@ -1,8 +1,11 @@
 package kizcool
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
 
-import "fmt"
+	log "github.com/sirupsen/logrus"
+)
 
 // Event is an interface for any event
 type Event interface {
@@ -46,6 +49,18 @@ type ExecutionStateChangedEvent struct {
 	OldState        string `json:"oldState,omitempty"`
 	OwnerKey        string `json:"ownerKey,omitempty"`
 	TimeToNextState int    `json:"timeToNextState,omitempty"`
+}
+
+// CommandExecutionStateChangedEvent indicates a change in the state of the execution of a command
+type CommandExecutionStateChangedEvent struct {
+	GenericEvent
+	DeviceURL       DeviceURL `json:"deviceURL,omitempty"`
+	ExecID          ExecID    `json:"execID,omitempty"`
+	SetupOID        string    `json:"setupOID,omitempty"`
+	NewState        string    `json:"newState,omitempty"`
+	FailureType     string    `json:"failureType,omitempty"`
+	FailureTypeCode int       `json:"failureTypeCode,omitempty"`
+	Rank            int       `json:"rank,omitempty"`
 }
 
 // GatewayEvent indicates an event related to a gateway
@@ -109,14 +124,22 @@ func (events *Events) UnmarshalJSON(data []byte) error {
 	var raw []json.RawMessage
 	err := json.Unmarshal(data, &raw)
 	if err != nil {
-		return err
+		log.WithFields(log.Fields{
+			"data": data,
+			"err":  err,
+		}).Debug("Error splitting into raw items")
+		return fmt.Errorf("Error splitting json into raw items. %w", err)
 	}
 	for _, r := range raw {
 		// unamrshal into a map to check the "Name" field
 		var obj map[string]interface{}
 		err := json.Unmarshal(r, &obj)
 		if err != nil {
-			return err
+			log.WithFields(log.Fields{
+				"err":  err,
+				"data": r,
+			}).Debug("Error retrieving Name field")
+			return fmt.Errorf("Error retrieving Name field. %w", err)
 		}
 
 		eventType := ""
@@ -131,6 +154,8 @@ func (events *Events) UnmarshalJSON(data []byte) error {
 			actual = &ExecutionRegisteredEvent{}
 		case "ExecutionStateChangedEvent":
 			actual = &ExecutionStateChangedEvent{}
+		case "CommandExecutionStateChangedEvent":
+			actual = &CommandExecutionStateChangedEvent{}
 		case "GatewaySynchronizationStartedEvent":
 			actual = &GatewaySynchronizationStartedEvent{}
 		case "GatewaySynchronizationEndedEvent":
@@ -151,7 +176,11 @@ func (events *Events) UnmarshalJSON(data []byte) error {
 
 		err = json.Unmarshal(r, actual)
 		if err != nil {
-			return err
+			log.WithFields(log.Fields{
+				"err":  err,
+				"data": r,
+			}).Debug("Error unmarshalling into struct")
+			return fmt.Errorf("Error unmarshalling into struct. %w", err)
 		}
 		*events = append(*events, actual)
 	}
