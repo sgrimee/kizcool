@@ -1,12 +1,14 @@
 package cmd
 
 import (
-	log "github.com/sirupsen/logrus"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/sgrimee/kizcool"
 	"github.com/sgrimee/kizcool/config"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var kiz *kizcool.Kiz
@@ -21,8 +23,14 @@ var RootCmd = &cobra.Command{
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+
 	if (len(os.Args) > 1) && (os.Args[1] != "configure") {
 		initKizFromConfig()
+	}
+
+	RootCmd.PersistentFlags().BoolP("debug", "d", false, "enable debugging")
+	if viper.GetBool("debug") {
+		log.SetLevel(log.DebugLevel)
 	}
 
 	if err := RootCmd.Execute(); err != nil {

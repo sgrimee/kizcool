@@ -92,7 +92,7 @@ func printTextDevice(w io.Writer, d Device) (err error) {
 			states = append(states, state)
 		}
 	}
-	if _, err = io.WriteString(w, fmt.Sprintf("| %-22s | %-33s | %v |\n",
+	if _, err = io.WriteString(w, fmt.Sprintf("| %-22s | %-33s | %v\n",
 		d.Label, d.DeviceURL, states)); err != nil {
 		return err
 	}
