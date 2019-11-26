@@ -99,6 +99,24 @@ type CommandDefinition struct {
 
 CommandDefinition describes the fields of a Command
 
+#### type CommandExecutionStateChangedEvent
+
+```go
+type CommandExecutionStateChangedEvent struct {
+	GenericEvent
+	DeviceURL       DeviceURL `json:"deviceURL,omitempty"`
+	ExecID          ExecID    `json:"execID,omitempty"`
+	SetupOID        string    `json:"setupOID,omitempty"`
+	NewState        string    `json:"newState,omitempty"`
+	FailureType     string    `json:"failureType,omitempty"`
+	FailureTypeCode int       `json:"failureTypeCode,omitempty"`
+	Rank            int       `json:"rank,omitempty"`
+}
+```
+
+CommandExecutionStateChangedEvent indicates a change in the state of the
+execution of a command
+
 #### type Device
 
 ```go
