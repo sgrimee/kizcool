@@ -26,13 +26,6 @@ jobs:
       - run:
           name: "Check formatting"
           command: diff -u <(echo -n) <(gofmt -d -s .)
-  # go-previous:
-  #   docker:
-  #     - image: circleci/golang:1.12
-  #   working_directory: *workspace
-  #   steps:
-  #     - checkout
-  #     - *run_tests
   go-latest:
     docker:
       - image: circleci/golang:latest
