@@ -39,5 +39,4 @@ workflows:
   main:
     jobs:
       - go-current
-      - go-previous
       - go-latest
