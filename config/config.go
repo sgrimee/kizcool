@@ -13,6 +13,8 @@ const (
 	TahomaBaseURL              = "https://tahomalink.com/enduser-mobile-web"
 )
 
+var usingConfigFile bool
+
 // Username returns the username
 func Username() string {
 	return viper.GetString("username")
@@ -62,17 +64,31 @@ func Read(create bool) error {
 	viper.AddConfigPath("$HOME")
 	viper.SetDefault("base_url", TahomaBaseURL)
 
+	viper.SetEnvPrefix("KIZ")
+	viper.AutomaticEnv()
+
 	if err := viper.ReadInConfig(); err != nil {
 		// create empty config file if needed
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok && create {
 			configFile, _ := homedir.Expand("~/" + DefaultConfigFileBaseName + DefaultConfigFileExtension)
 			viper.SetConfigPermissions(0600)
-			err = viper.SafeWriteConfigAs(configFile)
+			if err := viper.SafeWriteConfigAs(configFile); err != nil {
+				usingConfigFile = false
+				return err
+			}
+			usingConfigFile = true
 			return viper.ReadInConfig()
 		}
-		return err
+		usingConfigFile = false
+		return nil
 	}
+	usingConfigFile = true
 	return nil
+}
+
+// UsingConfigFile is true if a config file is used, false otherwise (e.g. only env variables)
+func UsingConfigFile() bool {
+	return usingConfigFile
 }
 
 // Write saves the current config to file

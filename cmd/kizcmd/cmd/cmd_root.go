@@ -37,10 +37,12 @@ func Execute() {
 		log.Fatal(err)
 	}
 
-	id := kiz.SessionID()
-	config.SetSessionID(id)
-	if err := config.Write(); err != nil {
-		log.Fatalf("Unable to save session ID to config file: %s\n", err)
+	if config.UsingConfigFile() {
+		id := kiz.SessionID()
+		config.SetSessionID(id)
+		if err := config.Write(); err != nil {
+			log.Fatalf("Unable to save session ID to config file: %s\n", err)
+		}
 	}
 }
 

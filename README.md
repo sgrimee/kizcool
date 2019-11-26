@@ -48,6 +48,14 @@ A static version of the godoc can be found [here](doc/package.md).
 
 Golang >= 1.13
 
+## Environment variables
+
+Config items can be given as environment variables:
+
+- KIZ_USERNAME
+- KIZ_PASSWORD
+- KIZ_BASE_URL
+
 ## Roadmap
 
 Features I want to add later on include:
