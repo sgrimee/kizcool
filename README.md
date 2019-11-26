@@ -44,6 +44,10 @@ This should work wherever go works. Tested on mac and linux. Efforts were made t
 
 A static version of the godoc can be found [here](doc/package.md).
 
+## Requirements
+
+Golang >= 1.13
+
 ## Roadmap
 
 Features I want to add later on include:
