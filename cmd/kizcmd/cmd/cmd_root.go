@@ -8,7 +8,6 @@ import (
 	"github.com/sgrimee/kizcool"
 	"github.com/sgrimee/kizcool/config"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var kiz *kizcool.Kiz
@@ -25,11 +24,11 @@ var RootCmd = &cobra.Command{
 func Execute() {
 
 	if (len(os.Args) > 1) && (os.Args[1] != "configure") {
-		initKizFromConfig()
+		kiz = kizFromConfig()
 	}
 
 	RootCmd.PersistentFlags().BoolP("debug", "d", false, "enable debugging")
-	if viper.GetBool("debug") {
+	if config.Debug() {
 		log.SetLevel(log.DebugLevel)
 	}
 
@@ -47,7 +46,7 @@ func Execute() {
 }
 
 // Initialise the global kiz from config file
-func initKizFromConfig() {
+func kizFromConfig() *kizcool.Kiz {
 	if err := config.Read(false); err != nil {
 		log.Fatal(err)
 	}
@@ -55,5 +54,5 @@ func initKizFromConfig() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	kiz = k
+	return k
 }

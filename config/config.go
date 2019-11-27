@@ -100,3 +100,8 @@ func Write() error {
 func File() string {
 	return viper.ConfigFileUsed()
 }
+
+// Debug returns true if debugging was requested
+func Debug() bool {
+	return viper.GetBool("debug")
+}
