@@ -5,23 +5,77 @@
   <p align="center"><a href="https://circleci.com/gh/sgrimee/kizcool"><img src="https://circleci.com/gh/sgrimee/kizcool.svg?style=shield" alt="Build Status"></a></p>
 </p>
 
-## Components
+# Components
 
-Executable `kizcool/exe/kizcmd` is a command-line utility to control devices.
+- Executable `kizcool/exe/kizcmd` is a command-line utility to control devices.
+- Package `kizcool` provides a high-level client with structs for events and devices.
+- Package `kizcool/api` provides a lower-level api client that returns the raw responses from the server without parsing.
 
-Package `kizcool` provides a high-level client with structs for events and devices.
+# Command line tool
 
-Package `kizcool/api` provides a lower-level api client that returns the raw responses from the server without parsing.
-
-## Get kizcool command line tool
+## Download and install kizcmd
 
 ```
-go get github.com/sgrimee/kizcool
-cd $GOPATH/src/github.com/sgrimee/kizcool/cmd/kizcmd
-go get
-go install
+go get -u github.com/sgrimee/kizcool/cmd/kizcmd
+go install github.com/sgrimee/kizcool/cmd/kizcmd
+```
+
+## Create a configuration file
+
+```
 kizcmd configure
 ```
+
+## Get all devices names
+
+```
+kizcmd get labels
+```
+
+## Send a command to a device
+
+```
+kizcmd on "my light"
+kizcmd off "my light"
+kizcmd instensity "my light" 50
+
+kizcmd open "my window"
+kizcmd close "my window"
+
+kizcmd open "my blind"
+kizcmd close "my blind"
+kizcmd closure "my blind" 75
+```
+
+## Get all devices data
+
+```
+kizcmd get devices
+```
+
+## Get one device in json format. Hint: jq is a nice json formatter
+
+```
+kizcmd get device "parents window" -ojson | jq
+```
+
+## Continuously poll for events from the installation and display them on the console
+
+```
+kizcmd listen
+```
+
+## Environment variables
+As an alternative to the config file, configuration items can be given as environment variables:
+- KIZ_USERNAME
+- KIZ_PASSWORD
+- KIZ_BASE_URL
+
+# Requirements
+
+## Go version
+
+Golang >= 1.13
 
 ## Supported gateways
 
@@ -40,29 +94,16 @@ However, the Overkiz system supports many more devices from several vendors. Som
 
 This should work wherever go works. Tested on mac and linux. Efforts were made to support windows but it is not tested.
 
-## Go package documentation
+# Go package documentation
 
 A static version of the godoc can be found [here](doc/package.md).
 
-## Requirements
+# Roadmap
 
-Golang >= 1.13
-
-## Environment variables
-
-Config items can be given as environment variables:
-
-- KIZ_USERNAME
-- KIZ_PASSWORD
-- KIZ_BASE_URL
-
-## Roadmap
-
-Features I want to add later on include:
-- Listener mode to register for events and see changes triggered via other controllers.
+Upcoming features include:
 - KNX bridge to control velux devices from a KNX system (the main goal for this project).
 
-## Notice of Non-affiliation and Disclaimer
+# Notice of Non-affiliation and Disclaimer
 
 We are not affiliated, associated, authorized, endorsed by, or in any way officially connected with [Overkiz](https://www.overkiz.com/), [Velux](https://www.velux.com/), [Somfy](https://www.somfy.com/), any other trademark mentioned in this project, or any of its subsidiaries or its affiliates. We are grateful for the great products and services they provide.
 
