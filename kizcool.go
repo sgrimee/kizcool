@@ -2,12 +2,12 @@ package kizcool
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sgrimee/kizcool/api"
 )
 
@@ -259,11 +259,11 @@ func (k *Kiz) SetClosure(device Device, position int) (ExecID, error) {
 func (k *Kiz) PollEvents() (Events, error) {
 	resp, err := k.clt.PollEvents()
 	if err != nil {
-		return nil, fmt.Errorf("Error getting events: %v", err)
+		return nil, fmt.Errorf("Error getting events: %w", err)
 	}
 	var result Events
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, fmt.Errorf("Error decoding events from json: %v", err)
+		return nil, fmt.Errorf("Error decoding events from json: %w", err)
 	}
 	return result, nil
 }

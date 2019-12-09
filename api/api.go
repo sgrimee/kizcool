@@ -5,6 +5,7 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -15,8 +16,6 @@ import (
 	"time"
 
 	"golang.org/x/net/publicsuffix"
-
-	"github.com/pkg/errors"
 )
 
 // Client provides methods to make http requests to the api server while making the
@@ -275,7 +274,7 @@ func (c *Client) PollEvents() (*http.Response, error) {
 				return nil, fmt.Errorf("Error retrieving events with valid listener: %w", err)
 			}
 		}
-		return nil, err
+		return nil, fmt.Errorf("Unknown %T error retrieving events: %w", err, err)
 	}
 	return resp, nil
 }
