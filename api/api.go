@@ -266,15 +266,16 @@ func (c *Client) PollEvents() (*http.Response, error) {
 	}
 	resp, err := c.pollEventsWithID(c.ListenerID())
 	if err != nil {
+		var er error
 		if _, ok := err.(*NoRegisteredEventListenerError); ok {
-			if err := c.registerListener(); err != nil {
-				return nil, fmt.Errorf("Error refreshing listener: %w", err)
+			if er = c.registerListener(); er != nil {
+				return nil, fmt.Errorf("Error refreshing listener: %w", er)
 			}
-			if resp, err = c.pollEventsWithID(c.ListenerID()); err != nil {
-				return nil, fmt.Errorf("Error retrieving events with valid listener: %w", err)
+			if resp, er = c.pollEventsWithID(c.ListenerID()); er != nil {
+				return nil, fmt.Errorf("Error retrieving events with valid listener: %w", er)
 			}
 		}
-		return nil, fmt.Errorf("Unknown %T error retrieving events: %w", err, err)
+		return nil, fmt.Errorf("Unknown error retrieving events: %w", err)
 	}
 	return resp, nil
 }
