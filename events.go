@@ -128,7 +128,7 @@ func (events *Events) UnmarshalJSON(data []byte) error {
 			"data": data,
 			"err":  err,
 		}).Debug("Error splitting into raw items")
-		return fmt.Errorf("Error splitting json into raw items. %w", err)
+		return fmt.Errorf("Error splitting json into raw items. %w (data: %s)", err, string(data[:20]))
 	}
 	for _, r := range raw {
 		// unamrshal into a map to check the "Name" field
