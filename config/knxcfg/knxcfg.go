@@ -1,4 +1,4 @@
-package group
+package knxcfg
 
 import "github.com/vapourismo/knx-go/knx/cemi"
 

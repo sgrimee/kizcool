@@ -8,11 +8,10 @@ import (
 
 	"github.com/sgrimee/kizcool"
 	"github.com/sgrimee/kizcool/config"
-	"github.com/sgrimee/kizcool/group"
+	"github.com/sgrimee/kizcool/config/knxcfg"
 
-	"github.com/sgrimee/knx-go/knx"
-
-	"github.com/sgrimee/knx-go/knx/util"
+	"github.com/vapourismo/knx-go/knx"
+	"github.com/vapourismo/knx-go/knx/util"
 )
 
 var kiz *kizcool.Kiz
@@ -77,6 +76,7 @@ func processKizEvent(kizEvent kizcool.Event) error {
 		"kind":  kizEvent.Kind(),
 		"event": kizEvent,
 	}).Debug("Kiz event")
+	// TODO: Bridge device state change events to knx
 	return nil
 }
 
@@ -87,6 +87,8 @@ func processKnxMsg(knxEvent knx.GroupEvent) error {
 		"Source":      knxEvent.Source,
 		"Value":       knxEvent.Data,
 	}).Debug("KNX event")
+
+	// TODO: support GroupRead commands
 
 	if knxEvent.Command != knx.GroupWrite {
 		return nil
@@ -107,7 +109,8 @@ func processKnxMsg(knxEvent knx.GroupEvent) error {
 	return nil
 }
 
-func processCommand(gcmd group.Command, gd group.Device, data []byte) {
+func processCommand(gcmd knxcfg.Command, gd knxcfg.Device, data []byte) {
+	// TODO: any way to not retrieve the device each time?
 	device, err := kiz.GetDevice(kizcool.DeviceURL(gd.URL))
 	if err != nil {
 		log.Fatal(err)
@@ -148,7 +151,7 @@ func processCommand(gcmd group.Command, gd group.Device, data []byte) {
 }
 
 // managedDevices simulates reading a device list from config
-func managedDevices() []group.Device {
+func managedDevices() []knxcfg.Device {
 	devices, err := config.Devices()
 	if err != nil {
 		log.Fatal(err)

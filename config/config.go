@@ -7,7 +7,7 @@ import (
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/mitchellh/mapstructure"
-	"github.com/sgrimee/kizcool/group"
+	"github.com/sgrimee/kizcool/config/knxcfg"
 	"github.com/spf13/viper"
 	"github.com/vapourismo/knx-go/knx/cemi"
 )
@@ -74,14 +74,14 @@ func SetSessionID(ID string) {
 // toGaddrHookFunc decodes strings into cemi.GroupAddr integers
 func toGaddrHookFunc() mapstructure.DecodeHookFunc {
 	return func(
-		f reflect.Type,
-		t reflect.Type,
+		from reflect.Type,
+		to reflect.Type,
 		data interface{}) (interface{}, error) {
 		// Only handle conversion from string to Uint16 (cemi.GroupAddr)
-		if t.Kind() != reflect.Uint16 {
+		if to.Kind() != reflect.Uint16 {
 			return data, nil
 		}
-		if f.Kind() != reflect.String {
+		if from.Kind() != reflect.String {
 			return data, nil
 		}
 		str := fmt.Sprintf("%v", data)
@@ -90,8 +90,8 @@ func toGaddrHookFunc() mapstructure.DecodeHookFunc {
 }
 
 // Devices returns the list of group devices defined in the config
-func Devices() ([]group.Device, error) {
-	var result []group.Device
+func Devices() ([]knxcfg.Device, error) {
+	var result []knxcfg.Device
 	opt := viper.DecodeHook(mapstructure.ComposeDecodeHookFunc(
 		toGaddrHookFunc(),
 	))
