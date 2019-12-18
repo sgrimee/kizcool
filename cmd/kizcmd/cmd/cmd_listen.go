@@ -26,6 +26,7 @@ var listenCmd = &cobra.Command{
 				log.WithFields(log.Fields{
 					"err": err,
 				}).Error("Polling error, will resume after a pause.")
+
 			case event := <-events:
 				log.WithFields(log.Fields{
 					"event": event,

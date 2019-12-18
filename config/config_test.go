@@ -17,16 +17,16 @@ username: me@nowhere.com
 bla: boum
 devices:
   - label: Spots lit parents
-    deviceurl: io://1111-0000-4444/11111111
+    url: io://1111-0000-4444/11111111
     commands:
-      - commandname: setIntensity
+      - name: setIntensity
         groupaddr: 10/0/3
-      - commandname: setOnOff
+      - name: setOnOff
         groupaddr: 10/0/4
     states:
-      - qualifiedname: core:OnOffState
+      - name: core:OnOffState
         groupaddr: 10/0/5
-      - qualifiedname: core:LightIntensityState
+      - name: core:LightIntensityState
         groupaddr: 10/0/6
 `)
 
