@@ -15,3 +15,6 @@ integration-test:
 coverage:
 	gotest -coverprofile=coverage.out 
 	go tool cover -html=coverage.out
+
+dependencies:
+	depth  ./cmd/kizknx  | grep  sgrimee
