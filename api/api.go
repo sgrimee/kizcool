@@ -274,6 +274,7 @@ func (c *Client) PollEvents() (*http.Response, error) {
 			if resp, er = c.pollEventsWithID(c.ListenerID()); er != nil {
 				return nil, fmt.Errorf("Error retrieving events with valid listener: %w", er)
 			}
+			return resp, nil
 		}
 		return nil, fmt.Errorf("Unknown error retrieving events: %w", err)
 	}
