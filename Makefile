@@ -7,11 +7,11 @@ doc:
 	godocdown > doc/package.md 
 
 test:
-	go test -v ./...
+	gotest -v ./...
 
 integration-test:
-	go test -tags=integration
+	gotest -tags=integration
 
 coverage:
-	go test -coverprofile=coverage.out 
+	gotest -coverprofile=coverage.out 
 	go tool cover -html=coverage.out
