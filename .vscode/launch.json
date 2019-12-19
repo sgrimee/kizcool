@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch get devices",
+            "name": "get devices",
             "type": "go",
             "request": "launch",
             "mode": "auto",
@@ -14,7 +14,7 @@
             "args": ["get", "devices"]
         },
         {
-            "name": "Launch configure",
+            "name": "configure",
             "type": "go",
             "request": "launch",
             "mode": "auto",
@@ -23,13 +23,31 @@
             "args": ["configure"]
         },
         {
-            "name": "Launch listen",
+            "name": "listen",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "program": "${fileDirname}",
             "env": {},
             "args": ["listen"]
+        },
+        {
+            "name": "knx template",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}",
+            "env": {},
+            "args": ["knx template"]
+        },
+        {
+            "name": "knx bridge",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}",
+            "env": {},
+            "args": ["knx bridge"]
         },
         {
             "name": "Launch test function",

@@ -24,6 +24,9 @@ var RootCmd = &cobra.Command{
 func Execute() {
 
 	RootCmd.PersistentFlags().BoolP("debug", "d", false, "enable debugging")
+	if err := config.Read(false); err != nil {
+		log.Fatal(err)
+	}
 	if config.Debug() {
 		log.SetLevel(log.DebugLevel)
 	}
@@ -48,8 +51,7 @@ func Execute() {
 
 	// save sessionID to config file
 	if config.UsingConfigFile() {
-		id := kiz.SessionID()
-		config.SetSessionID(id)
+		config.SetSessionID(kiz.SessionID())
 		if err := config.Write(); err != nil {
 			log.Fatalf("Unable to save session ID to config file: %s\n", err)
 		}
@@ -58,9 +60,7 @@ func Execute() {
 
 // Initialise the global kiz from config file
 func kizFromConfig(useCachedSessionID bool) *kizcool.Kiz {
-	if err := config.Read(false); err != nil {
-		log.Fatal(err)
-	}
+
 	var sessionID string
 	if useCachedSessionID {
 		sessionID = config.SessionID()

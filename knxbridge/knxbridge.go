@@ -145,3 +145,40 @@ func (br *Bridge) processCommand(gcmd knxcfg.Command, d kizcool.Device, data []b
 	}
 	return nil
 }
+
+// ConfigNameForKizCommand returns the string to use as command name in the configuration if the command
+// is supported, an empty string otherwise.
+func ConfigNameForKizCommand(cname string) string {
+	supported := map[string]string{
+		"setClosure":   "setClosure",
+		"open":         "setOpenClose",
+		"close":        "setOpenClose",
+		"up":           "setOpenClose",
+		"down":         "setOpenClose",
+		"stop":         "stop",
+		"on":           "setOnOff",
+		"off":          "setOnOff",
+		"setOnOff":     "setOnOff",
+		"setIntensity": "setIntensity",
+	}
+	if val, ok := supported[cname]; ok {
+		return val
+	}
+	return ""
+}
+
+// ConfigNameForKizState returns the string to use as state name in the configuration if the state
+// is supported, an empty string otherwise.
+func ConfigNameForKizState(cname string) string {
+	supported := map[string]struct{}{
+		"core:ClosureState":        {},
+		"core:OpenClosedState":     {},
+		"core:LightIntensityState": {},
+		"core:OnOffState":          {},
+	}
+	if _, ok := supported[cname]; ok {
+		// Direct mapping, no translation needed
+		return cname
+	}
+	return ""
+}

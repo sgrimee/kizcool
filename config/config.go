@@ -100,6 +100,11 @@ func Devices() ([]knxcfg.Device, error) {
 	return result, err
 }
 
+// SetDevices saves the list of devices to the config
+func SetDevices(devices []knxcfg.Device) {
+	v.Set("devices", devices)
+}
+
 // Read reads in config file. It should be called before using other functions in this package.
 // The local directory is searched first, then the user's home directory
 // If no file is found and create is true, a config file with defaults is created.
