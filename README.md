@@ -5,13 +5,13 @@
   <p align="center"><a href="https://circleci.com/gh/sgrimee/kizcool"><img src="https://circleci.com/gh/sgrimee/kizcool.svg?style=shield" alt="Build Status"></a></p>
 </p>
 
-[Documentation](https://godoc.org/github.com/sgrimee/kizcool)
-
 # Components
 
 - Executable `kizcool/exe/kizcmd` is a command-line utility to control devices.
 - Package `kizcool` provides a high-level client with structs for events and devices.
+[Documentation](https://godoc.org/github.com/sgrimee/kizcool).
 - Package `kizcool/api` provides a lower-level api client that returns the raw responses from the server without parsing.
+[Documentation](https://godoc.org/github.com/sgrimee/kizcool/api).
 
 # Command line tool
 
