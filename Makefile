@@ -2,10 +2,6 @@
 
 all: test integration-test coverage doc
 
-doc:
-	go get github.com/robertkrimen/godocdown/godocdown
-	godocdown > doc/package.md 
-
 test:
 	go test -v ./...
 
